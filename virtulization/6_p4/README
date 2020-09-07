@@ -1,0 +1,37 @@
+Summary:                                                                         
+========
+
+Redirecting the output of exec() system call to some file instead of default 
+output.
+
+Compilation:                                                                     
+============
+
+[ ] gcc p4.c -o p4
+
+Execution:                                                                       
+==========
+
+[ ] ./p4 
+
+output:                                                                          
+=======
+
+[ ] ls  <-- notice that a new file p4.output has been created after execution.
+README		p4		p4.c		p4.output
+
+
+Explanation:                                                                     
+============
+
+When p4 is run, it looks as if nothing has happened, the shell just prints the 
+command prompt and is immediatly ready for your next command.
+
+However, that is not the case; the program p4 did indeed call fork() to create a
+ new child, and then run the wc program via a call to execvp().
+
+You don't see any output printed to the screeen because it has been redirected 
+to the file p4.output.
+
+Second, you can see that when we cat the output file, all the expected output 
+from running wc found.

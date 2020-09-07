@@ -1,0 +1,75 @@
+Summary:                                                                         
+======== 
+
+This program has been written to show that we can run multiple programs in the
+same CPU.
+
+This program 'cpu.c' is just having an endless while loop and prints the string
+passed to it. like strings "A", "B" , "C" and "D" are passed to these processes.
+
+Compilation:                                                                     
+============
+
+[ ] gcc cpu.c -o cpu
+
+
+Execution:                                                                       
+========== 
+
+Start 4 processes in backgroud 
+
+[ ] ./cpu A & ./cpu B & ./cpu C & ./cpu D & 
+
+output:                                                                          
+=======
+
+[ ] ./cpu A & ./cpu B & ./cpu C & ./cpu D &
+[1] 74375
+[2] 74376
+[3] 74377
+[4] 74378
+B
+C
+D
+A
+B
+D
+C
+A
+B
+D
+C
+A
+B
+D
+.....
+
+You can kill these backgroup process as below:
+
+[ ] ps -eaf | grep cpu
+  501 74375 67229   0  1:44PM ttys000    0:00.00 ./cpu A
+  501 74376 67229   0  1:44PM ttys000    0:00.00 ./cpu B
+  501 74377 67229   0  1:44PM ttys000    0:00.00 ./cpu C
+  501 74378 67229   0  1:44PM ttys000    0:00.00 ./cpu D
+  501 74397 71541   0  1:44PM ttys001    0:00.00 grep cpu
+[ ] kill -9 74375 74376 74377 74378
+
+
+Explanation:                                                                     
+============
+
+Even though we have only once processor, somehow all four of these
+programs seems to be running at the same time! How does this magic happen?
+
+It turns out that the Operating system, with some help from the hardware, is in
+charge of this illusion, i.e., the illusion that then system has a very large
+number of virtual CPU's.
+
+Turning a CPU (or a small set of them) into a seemingly infinite number of CPUs
+and thus allowing many progrms to seemingly run at once is what we call
+"virtualizing the CPU".
+
+You might also notice that the ability to run multiple programs at once raises
+all sorts of new questions. For example, if two programs want to run at a
+particular time, which should run? This question is answered by a policy of the
+OS.

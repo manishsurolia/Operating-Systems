@@ -1,0 +1,57 @@
+Summary:                                                                         
+======== 
+
+This program (p1.c) provides a mechanism to create a new process using fork() 
+system call.
+
+Compilation:                                                                     
+============
+
+[ ] gcc p1.c -o p1
+
+Execution:                                                                       
+==========
+
+[ ] ./p1
+
+output:                                                                          
+=======
+
+Hello world (pid : 49565) <--- Parent process.
+Hello, I am parent of 49566 (pid : 49565)  <-- after fork(), parent got executed first.
+Hello, I am child (pid : 49566) <-- after fork(), child process gor executed second.
+
+Explanation:                                                                     
+============
+
+When the program first started running, the process prints out a hello world 
+message; included in that message is its process idnetifier, also known as a PID
+. The process has a PID of 49565; in UNIX systems, the PID is used to name the
+process if one wants to do something with the process, such as (for example) 
+stop it from running. So far, so food.
+
+Now the interesteing part begins. The process calls fork() system call, which 
+the OS provides as a way to create a new process. The odd part; the process 
+that it created is an (almost) exact copy of the calling process. That means, 
+that to the OS, it now looks like there are two copies of the progams P1 
+running, and both are about to return from the fork() sysetm call.
+
+The newly-created process(called the child, in contrast to the creating parent) 
+doesnt start running at main(), like you might expect(note, the "Hello, world" 
+message only got printed out once); rather, it just comes into life as if it 
+had called fork() itself.
+
+You might have noticed: the child is not an exact copy. Specifically although 
+it now has its own copy of the address space (i.e, its own pricate memroy), its 
+own registers, its own PC, and so forth, the value it returns to the caller of 
+fork() is differnt. Specifically, while the parent receives the PID of the newly
+ created child, the child is simply returned a 0. This differntiation is useful,
+ because it is simple then to write the code that handles the two differnt cases
+.
+
+You might also have noticed: the output is ont deterministic. When the child 
+process is created, there are now two active processes in the system that we 
+care about: the parent and the child. Assuming we are running on a system with 
+a single CPU(for simplicity), then either the child or the parent might run at 
+that point. In our example,(above), the parent did and thus printed out its 
+message first. In other cases, the opposite might happen.

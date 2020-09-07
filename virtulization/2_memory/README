@@ -1,0 +1,75 @@
+Summary:                                                                         
+======== 
+
+This program has been written to show that each program has its own private 
+memory, instead of sharing the same physical memory with other running programs.
+
+This program 'mem.c' is doing below tasks:
+
+1. Allocate memory with 'malloc'.
+2. Assign the value(passed  during command execution) to this memory.
+3. An endless while loop just increaments the value with 1 second delay.
+
+Compilation:                                                                     
+============
+
+[ ] gcc mem.c -o mem
+
+
+Execution:                                                                       
+========== 
+Start 2 processes in backgroud 
+
+[ ]  ./mem 23 & ./mem 59 &
+
+output:                                                                          
+=======
+
+[1] 7306
+[2] 7307
+Memory (7306) address of p: 0x7f84db402680
+Memory (7307) address of p: 0x7f84db402680
+(7306) p: 24
+(7307) p: 60
+(7306) p: 25
+(7307) p: 61
+(7306) p: 26
+(7307) p: 62
+(7306) p: 27
+(7307) p: 63
+(7306) p: 28
+(7307) p: 64
+(7306) p: 29
+..................
+
+
+You can kill these backgroup process as below:
+
+[ ] ps -eaf | grep mem
+  501  7306   778   0  2:52PM ttys000    0:00.00 ./mem 23
+  501  7307   778   0  2:52PM ttys000    0:00.00 ./mem 59
+  501  7328   785   0  2:53PM ttys001    0:00.00 grep mem
+[ ] kill -9 7306 7307
+
+Explanation:                                                                     
+============ 
+
+Both the executions here have the memory allocated at the same 
+address(0x7f84db402680), but both the processes has its own value incrementing(
+23,24,25,26,27....... and 59,60,61,62,63.......etc) at the same address.. How is
+ this possible?
+
+It is possible because each running program has its own pricate memory, instead
+ of sharing the same physical memory with other running programs.
+
+Here, OS is virtualizing memory. Each process accesses its own private "virtual 
+address space", sometimes just called as "address space", which the OS somehow 
+maps onto the physical memory(RAM) of the machine.
+
+A memory reference within one running program does not affect the address space 
+of the other processes and the "address space" of this process is used by itself
+.
+
+
+Note : For this example to work, you need to make sure that address-space 
+randomization is disabled.

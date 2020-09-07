@@ -1,0 +1,33 @@
+Summary:                                                                         
+========
+
+Sometimes, as it turns out, it is quite useful for a parent to wait for a child 
+process to finish what it has been doing. This task is accomplished with the 
+wait() system call (or its complete sibling waitpid()).
+
+Compilation:                                                                     
+============
+
+[ ] gcc p2.c -o p
+
+Execution:                                                                       
+==========
+
+[ ] ./p2
+
+output:                                                                          
+=======
+
+Hello, world (pid : 73923)
+Hello, I am child (pid : 73924)
+Hello, I am parent of 73924 (wc : 73924) (pid : 73923)
+
+Explanation:                                                                     
+============
+
+The parent process calls wait() to delay its execution until the child finishes 
+executing. When the child is done, wait() returns to the parent.
+
+Adding a wait() call to the code makes the output deterministic.
+
+read 'man 2 wait' for more information on all variants of wait() system call.

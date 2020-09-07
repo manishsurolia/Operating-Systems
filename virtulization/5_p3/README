@@ -1,0 +1,74 @@
+Summary:                                                                         
+========
+
+An important piece of the process creation API is the exec() system call. This 
+system call is useful when you want to run a program that is differnt from the 
+calling program.
+
+For example, calling fork() in p2.c is only useful if you want to keep running 
+copies of the same programs.
+
+However, often you want to run a different program; exec() does just that.
+
+Compilation:                                                                     
+============
+
+[ ]  gcc  p3.c -o p3
+
+Execution:                                                                       
+========== 
+
+[ ]  ./p3 
+
+output:                                                                          
+=======
+
+Hello world (pid : 76177)
+Hello, I am child (pid : 76178)
+      28      96     757 p3.c
+Hello, I am parent of 76178 (wc : 76178) (pid : 76177) 
+
+Explanation:                                                                     
+============
+
+In this example, the child process calls execvp() in order to run the program 
+wc, which is the word counting program. In fact, it runs wc on the source file 
+p3.c, thus telling us how many lines, words, and bytes are found in the file:
+
+Note : fork() and exec() does a similar job. The difference is that fork() makes
+ copies of itself, but exec() just replaces the existing process body with the 
+new program.
+
+What exec() does : Given the name of an executable, (like wc in our case), and 
+some arguments(like, p3.c in our case), it loads code and static data from that 
+executables and over writes its current code segment(and current static data) 
+with it; the heap and stack and other parts of the memory space of the programs 
+are re-initialized. 
+
+Then the OS simply runs that program, passing in any arguments as the argv of 
+that process. Thus, it does not create a new process; rather it transforms the 
+currently running program(formerly p3) into a different running program (wc). 
+After the exec() in the child, it is almost as if p3.c never ran.
+
+Important note : a sucessful call to exec() never returns.
+
+A real world use case of exec():
+================================
+
+The sepraration of fork() and exec() is essential in building a UNIX shell, 
+because it lets the shell run code after the call to fork() but before the call 
+to exec().
+
+The shell is just a user program. It shows you a prompt and then waits for you 
+to type something into it. You then type a command (the name of an executable 
+program, plus any arguments) into it;
+
+In most cases, the shell then figures out where in the file system the 
+executable resides, calls fork() to create a new child process to run the 
+command, and then waits for the command to complete by calling wait(). When the 
+child completes the shell returns from wait() and prints out a prompt again, 
+ready for your next command.
+
+
+The sepratation of fork() and exec() allows the shell to do a whole bunch of 
+useful things rather eaisly.

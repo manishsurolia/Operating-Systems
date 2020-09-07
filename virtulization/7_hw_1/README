@@ -1,0 +1,13 @@
+Problem:
+========
+
+Write a program that calls fork(). Before calling fork(), have the main process 
+access a variable (e.g., x) and set its value to some thing(e.g., 100).
+What value is the variable in the child process?
+what happens to the variable when both the child and parent change the value of 
+x?
+
+Both process have its own copy of variable, x, so  increments  by both the 
+procesesses does not have change each other value of x.
+
+gcc hw_1.c -o hw_1
