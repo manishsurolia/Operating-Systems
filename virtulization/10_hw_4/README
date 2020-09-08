@@ -1,0 +1,23 @@
+Write a program that calls fork() and then calls some form of
+exec() to run the program /bin/ls. See if you can try all of the
+variants of exec(), including (on Linux) execl(), execle(),
+execlp(), execv(), execvp(), and execvpe(). Why do
+you think there are so many variants of the same basic call?
+
+
+[ ] gcc 10_hw.c  -o 10_hw
+[ ] ./10_hw 
+Hello, I am child. I will call execv to launch ls command
+total 40
+drwxr-xr-x  12 masuroli  staff   384 Sep  7 17:21 ..
+-rw-r--r--   1 masuroli  staff   702 Sep  7 18:48 10_hw.c
+-rw-r--r--   1 masuroli  staff   302 Sep  7 18:49 README
+drwxr-xr-x   5 masuroli  staff   160 Sep  7 18:49 .
+-rwxr-xr-x   1 masuroli  staff  8832 Sep  7 18:49 10_hw
+Hello, I am parent.
+MASUROLI-M-91RM:10_hw_3 masuroli$ 
+
+
+
+All exec system calls does the same thing. There are different variants provided
+ for ease of use for programmer.

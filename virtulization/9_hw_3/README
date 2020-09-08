@@ -1,0 +1,14 @@
+Write another program using fork(). The child process should print "Hello"; the 
+parent process should print "goodbye". You should try to ensure that the child 
+process always prints first; can you do this without calling wait() in the 
+parent?
+
+Yes, by adding sleep() in the parent process, it will always execute child first
+
+[ ] gcc 9_hw.c -o 9_hw
+
+
+[ ] ./9_hw
+Hello, I am child process. (pid : 6982)
+Goodbye, I am parent process. (pid: 6981)
+ 

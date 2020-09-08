@@ -1,0 +1,19 @@
+Write a slight modification of the previous program, this time using waitpid() 
+instead of wait(). When would waitpid() be useful?
+
+
+[ ] gcc 12_hw.c  -o 12_hw 
+[ ] ./12_hw 
+Hello, I am parent (pid : 30738). waiting for child : 30739 to finish.
+Hello, I am child(pid : 30739). I will call execv to launch ls command
+total 64
+drwxr-xr-x  14 masuroli  staff   448 Sep  7 18:55 ..
+-rw-r--r--   1 masuroli  staff   133 Sep  7 18:56 README
+-rwxr-xr-x   1 masuroli  staff  8888 Sep  7 19:02 a.out
+-rw-r--r--   1 masuroli  staff   952 Sep  7 19:05 12_hw.c
+drwxr-xr-x   6 masuroli  staff   192 Sep  7 19:05 .
+-rwxr-xr-x   1 masuroli  staff  8888 Sep  7 19:05 12_hw
+I am parent, executing after child pid(pid : 30739) has finished
+
+waitpid is useful when a process creates multiple processes and want to wait 
+for only specific process id.

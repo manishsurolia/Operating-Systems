@@ -1,0 +1,10 @@
+Write a program that creates two children, and connects the standard output of 
+one to the standard input of the other, using the pipe() system call.
+
+[ ] gcc 14_hw.c -o 14_hw
+[ ] ./14_hw 
+Parent process(pid : 41088)  I will create a pipe and will use it in parent and child processes
+Child process(pid : 41089). I will use fd[1] to write to the pipe.
+Parent process(pid : 41088). I will use fd[0] to read from the pipe.
+Message got from child process : MESSAGE_FROM_CHILD
+

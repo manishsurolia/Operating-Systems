@@ -1,0 +1,34 @@
+Write a program that opens a file(with the open() system call) and then calls 
+fork() to create a new process. Can both the child and parent access the file 
+descriptor returned by open()? What happens when they are writing to the file 
+concurrently, i.e., at the same time?
+
+[ ] gcc 8_hw.c -o 8_hw
+
+
+the output is written the file output.txt.
+
+Yes, both parent and child are able to use the same file descriptor initiated 
+before fork().
+
+Both are able to write data to the same file concurrently.
+
+output:
+=======
+[ ] ./8_hw
+
+[ ] cat output.txt 
+PARENT
+CHILD
+PARENT
+PARENT
+CHILD
+PARENT
+PARENT
+CHILD
+PARENT
+PARENT
+CHILD
+PARENT
+...........
+........

@@ -1,0 +1,18 @@
+Now write a program that uses wait() to wait for the child process
+to finish in the parent. What does wait() return? What happens if
+you use wait() in the child?
+
+
+[ ] gcc 11_hw.c -o 11_hw
+[ ] ./11_hw 
+Hello, I am child. I will call execv to launch ls command
+total 40
+drwxr-xr-x  13 masuroli  staff   416 Sep  7 18:52 ..
+-rw-r--r--   1 masuroli  staff   722 Sep  7 18:53 11_hw.c
+-rw-r--r--   1 masuroli  staff   165 Sep  7 18:54 README
+drwxr-xr-x   5 masuroli  staff   160 Sep  7 18:54 .
+-rwxr-xr-x   1 masuroli  staff  8832 Sep  7 18:54 11_hw
+Hello, I am parent.
+
+
+There is no impact of adding wait() in the child process.

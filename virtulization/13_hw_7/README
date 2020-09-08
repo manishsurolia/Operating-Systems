@@ -1,0 +1,12 @@
+Write a program that creates a child process, and then in the child
+closes standard output (STDOUT FILENO). What happens if the child
+calls printf() to print some output after closing the descriptor?
+
+
+[ ] gcc 13_hw.c -o 13_hw
+[ ] ./13_hw 
+Hello, I am parent process. See child has closed the default output file descriptor(STDOUT_FILENO), now its printf is not working
+
+
+Result : If you close STDOUT_FILENO, then you can not print on the stdout.
+
