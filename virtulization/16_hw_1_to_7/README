@@ -1,0 +1,230 @@
+Question 1. Compute the response time and turnaround time when running three 
+jobs of length 200 with the SJF and FIFO schedulers.
+
+
+J1 = 200
+J2 = 200
+J3 = 200
+
+
+SJF:
+====
+
+         J1         J2          J3     
+    |__________|___________|____________|____
+    0         200         400          600
+
+
+J1  :   Response time   :   0
+    :   Turnadound time :   200
+
+J2  :   Response Time   :   200
+    :   Turnaround Time :   400
+
+J3  :   Response Time   :   400
+    :   Turnaround Time :   600
+
+
+FIFO:
+====
+
+         J1         J2          J3     
+    |__________|___________|____________|____
+    0         200         400          600
+
+
+J1  :   Response time   :   0
+    :   Turnadound time :   200
+
+J2  :   Response Time   :   200
+    :   Turnaround Time :   400
+
+J3  :   Response Time   :   400
+    :   Turnaround Time :   600
+
+
+Result :
+========
+
+If the lenghts of each job are same, then both FIFO and SJF gives same response 
+and turnaround times.
+===============================================================================
+===============================================================================
+===============================================================================
+===============================================================================
+
+Question 2. Now, do the same buth with jobs of different lenghts: 100, 200 and 
+300.
+
+J1 = 100
+J2 = 200
+J3 = 300
+
+
+SJF:
+====
+
+       J1     J2          J3     
+    |_____|_________|______________|_________ Time-->
+    0     100       300            600
+
+
+J1  :   Response time   :   0
+    :   Turnadound time :   100
+
+J2  :   Response Time   :   100
+    :   Turnaround Time :   300
+
+J3  :   Response Time   :   300
+    :   Turnaround Time :   600
+
+
+FIFO:
+=====
+
+Assuming that J1 came just a slight before J2 and J2 came just a slight 
+before J3.
+
+       J1     J2          J3     
+    |____|_________|______________|________  Time-->
+    0    100       300            600
+
+
+J1  :   Response time   :   0
+    :   Turnadound time :   100
+
+J2  :   Response Time   :   100
+    :   Turnaround Time :   300
+
+J3  :   Response Time   :   300
+    :   Turnaround Time :   600
+
+===============================================================================
+===============================================================================
+===============================================================================
+===============================================================================
+
+Question 3 : Now, do the same, buth also with RR Scheduler and a time slice of 
+1.
+
+J1 = 2
+J2 = 3
+J3 = 4
+
+RR (time slice : 1):
+
+   
+      J1   J2   J3   J1   J2   J3   J2   J3   J3
+    |____|____|____|____|____|____|____|____|____|____  Time-->
+    0    1    2    3    4    5    6    7    8   9
+
+
+J1  :   Response time   :   0
+    :   Turnadound time :   4
+
+J2  :   Response Time   :   1
+    :   Turnaround Time :   7
+
+J3  :   Response Time   :   2
+    :   Turnaround Time :   9
+
+===============================================================================
+===============================================================================
+===============================================================================
+===============================================================================
+
+Question 4: For waht types of workloads does SJF deliver the same turnaround 
+times as FIFO?
+
+
+Answer : If the lenghts of each job are same, then both FIFO and SJF gives same 
+response and turnaround times.
+
+===============================================================================
+===============================================================================
+===============================================================================
+===============================================================================
+
+Question 5 : For what types of workloads and quantum lenghts does SJF deliver 
+the same response time as RR?
+
+Answer : if the size of each job is same as quantum length of RR schduling, 
+then each job will have same respone time.
+
+===============================================================================
+===============================================================================
+===============================================================================
+===============================================================================
+
+Question 6 : What happens to response time with SJF as job lenghts increase?
+Can you use the simulator to demonstrate the trend?
+
+Below are the output of average response time with increase in the job lengths.
+Job length is the maximum lenths from the provided job lengths for an execution.
+
+Job length  : Response time
+    4       :   1.67
+    8       :   3
+    12      :   4.33
+    16      :   5.33
+    20      :   6.67
+    24      :   8
+    27      :   9.93
+    31      :   10.33
+    35      :   11.67
+    39      :   13
+    43      :   14.67
+
+It clearly shows that with increase in the job length, Response time also 
+increases. But the change is very less compare to the change in job sizes.
+
+RR scheduling has better response time for the same samples, but the trunaound 
+time becomes more with RR.
+
+===============================================================================
+===============================================================================
+===============================================================================
+===============================================================================
+
+Question 7: What happens to response time with RR as quantum lengths increse?
+Can  you write an equation that gives the worst-case response time, Given N 
+jobs ?
+
+Answer : With Quantum lengths increse, the response time jobs with decrease as 
+CPU will be used by a process for long time.
+
+Below equation can provide the worst case response time.
+
+If the number of jobs are : N
+and the size of quantum is : q
+
+The the worst case response time will be : (N-1) * q
+
+The considerations for this equation is as below:
+    (i) suppose, all the jobs have length greater than quantum size of RR.
+    (ii) The last job to get the response from CPU, will get it once all 'N-1'
+         jobs have run for the quantum time(q) each.
+
+
+For example,
+
+We have 5 jobs with job lengths as :
+
+Job1 : 3
+Job2 : 6
+Job3 : 10
+Job4 : 15
+
+and response time is : 2
+
+The Job4 will get the response after all jobs(Job1, Job2, Job3 have executed 
+for 2 time unit each.
+
+then 2+2+2 = 6, Job4 will start at 6.
+
+we get the same result from the formula:
+
+worst response time = (N - 1) * q
+                    
+                    = (4 - 1) * 2 = 6
+
