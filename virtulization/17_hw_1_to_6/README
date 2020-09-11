@@ -1,0 +1,262 @@
+Question 1 : Run a few randomly-generated problems with just two jobs and two 
+queues; compute the MLFQ execution trace for each. Make your life easier by 
+limiting the length of each job and turning off I/O's.
+
+Answer:
+
+./mlfq.py --numQueues=2 --numJobs=2 --iotime=0 --maxio=0 --maxlen=100 --quantum=10 -s 10 -c
+
+OPTIONS queues 2
+
+Job List:
+  Job  0: startTime   0 - runTime  57 - ioFreq   0
+  Job  1: startTime   0 - runTime  58 - ioFreq   0
+
+Final statistics:
+  Job  0: startTime   0 - response   0 - turnaround 107
+  Job  1: startTime   0 - response  10 - turnaround 115
+
+  Avg  1: startTime n/a - response 5.00 - turnaround 111.00
+
+
+=====
+
+
+./mlfq.py --numQueues=2 --numJobs=2 --iotime=0 --maxio=0 --maxlen=100 --quantum=10 -s 11 -c
+
+OPTIONS queues 2
+
+Job List:
+  Job  0: startTime   0 - runTime  45 - ioFreq   0
+  Job  1: startTime   0 - runTime  92 - ioFreq   0
+
+Final statistics:
+  Job  0: startTime   0 - response   0 - turnaround  85
+  Job  1: startTime   0 - response  10 - turnaround 137
+
+  Avg  1: startTime n/a - response 5.00 - turnaround 111.00
+
+
+==============================================================================
+==============================================================================
+==============================================================================
+==============================================================================
+
+Question 2: How would you run the scheduler to reproduce each of the examples 
+in the chaptor?
+
+
+Figure 8.2 Repro: Long-running Job Over Time
+=============================================
+
+[ ] ./mlfq.py --numQueues=3 --jlist=0,200,0 --quantum=10 -c
+
+OPTIONS queues 3
+
+Job List:
+  Job  0: startTime   0 - runTime 200 - ioFreq   0
+
+Final statistics:
+  Job  0: startTime   0 - response   0 - turnaround 200
+
+  Avg  0: startTime n/a - response 0.00 - turnaround 200.00
+
+
+Note : The above is just job list and final stats from output. If you see the complete output of above command,
+you will see that the only job we have provided here, runs on Q2(prority 2 queue) first for 10 ms, 
+and then on Q1(prority 2 queue) for 10 ms and then on Q0(prority 2 queue) for remaining time.
+
+
+
+Figure 8.3 Repro: Along Came An Interactive Job
+===============================================
+
+[ ] ./mlfq.py --numQueues=3 --jlist=0,200,0:100,20,0 --quantum=10 -c
+
+OPTIONS queues 3
+
+Job List:
+  Job  0: startTime   0 - runTime 200 - ioFreq   0
+  Job  1: startTime 100 - runTime  20 - ioFreq   0
+
+Final statistics:
+  Job  0: startTime   0 - response   0 - turnaround 220
+  Job  1: startTime 100 - response   0 - turnaround  20
+
+  Avg  1: startTime n/a - response 0.00 - turnaround 120.00
+
+Note : The above is just job list and final stats from output. If you see the complete output of above command,
+you will see that initially the Job0 runs on Q2(prority 2 queue) first for 10 ms,
+and then on Q1(prority 2 queue) for 10 ms and then on Q0(prority 2 queue) till time reaches 100. 
+At time tick 100, Job1 starts and runs for 10 ms on Q2(prority 2 queue) for 10 ms, and then on Q1(prority 2 queue) for 10 ms where it ends.
+Then again J0 continues on Q0 till its end.
+
+
+
+Figure 8.4 Repro: A Mixed I/O-intensive and CPU-Intensive workload
+==================================================================
+
+./mlfq.py --numQueues=3 --jlist=0,200,0:40,20,1 --quantum=10 --iotime=8 --stay -c
+
+OPTIONS jobs 2
+OPTIONS queues 3
+
+Job List:
+  Job  0: startTime   0 - runTime 200 - ioFreq   0
+  Job  1: startTime  40 - runTime  20 - ioFreq   1
+
+
+Final statistics:
+  Job  0: startTime   0 - response   0 - turnaround 220
+  Job  1: startTime  40 - response   0 - turnaround 172
+
+  Avg  1: startTime n/a - response 0.00 - turnaround 196.00
+
+Figure 8.5 Without(left) and with(Right) Priority Boost
+=======================================================
+Without(left) Priority Boost
+
+./mlfq.py --numQueues=3 --jlist=0,150,0:100,100,1:100,100,1 --quantum=10 --iotime=1 --stay -c
+
+OPTIONS jobs 3
+OPTIONS queues 3
+
+Job List:
+  Job  0: startTime   0 - runTime 150 - ioFreq   0
+  Job  1: startTime 100 - runTime 100 - ioFreq   1
+  Job  2: startTime 100 - runTime 100 - ioFreq   1
+
+Final statistics:
+  Job  0: startTime   0 - response   0 - turnaround 350
+  Job  1: startTime 100 - response   0 - turnaround 199
+  Job  2: startTime 100 - response   1 - turnaround 200
+
+  Avg  2: startTime n/a - response 0.33 - turnaround 249.67
+
+
+with(Right) Priority Boost
+
+./mlfq.py --numQueues=3 --jlist=0,150,0:100,100,1:100,100,1 --quantum=10 --iotime=1 --stay --boost=110 -c
+
+OPTIONS jobs 3
+OPTIONS queues 3
+
+Job List:
+  Job  0: startTime   0 - runTime 150 - ioFreq   0
+  Job  1: startTime 100 - runTime 100 - ioFreq   1
+  Job  2: startTime 100 - runTime 100 - ioFreq   1
+
+Final statistics:
+  Job  0: startTime   0 - response   0 - turnaround 350
+  Job  1: startTime 100 - response   0 - turnaround 221
+  Job  2: startTime 100 - response   1 - turnaround 222
+
+  Avg  2: startTime n/a - response 0.33 - turnaround 264.33
+
+Figure 8.6 Without(left) and with(Right) Gaming Tolerance
+=========================================================
+
+Without(left) : This scheduler is without gaming Tolerance. As you can see that first the job0 starts at time 0,
+and runs for 10 ms, till the second job(job1) comes, by this time, job0 has reached to the Queue0.
+
+Now, when the job1 starts at time '30 ms', then it is gaming the scheduler by just relinquishing the CPU at every 9 ms.
+so that it is staying at the same queue0 and Job1 dominates the CPU till this process exists. once it is completed, other 
+job0 gets time to execute.
+
+./mlfq.py --numQueues=3 --jlist=0,50,0:30,50,9 --quantum=10 --iotime=1 --stay -c
+
+OPTIONS jobs 2
+OPTIONS queues 3
+
+Job List:
+  Job  0: startTime   0 - runTime  50 - ioFreq   0
+  Job  1: startTime  30 - runTime  50 - ioFreq   9
+
+Final statistics:
+  Job  0: startTime   0 - response   0 - turnaround 100
+  Job  1: startTime  30 - response   0 - turnaround  55
+
+  Avg  1: startTime n/a - response 0.00 - turnaround 77.50
+
+with(Right) Gaming Tolerance : Below should have given correct answer,but not getting.
+
+
+./mlfq.py --numQueues=3 --jlist=0,50,0:30,50,9 --quantum=10 --iotime=1 --stay --allotment=10  -c
+
+Figure 8.7 : Lower Priority, Longer Quanta
+===========================================
+
+./mlfq.py --numQueues=3 --jlist=0,100,0:0,100,0 --quantumList=10,20,40  -c
+
+OPTIONS jobs 2
+OPTIONS queues 3
+
+Job List:
+  Job  0: startTime   0 - runTime 100 - ioFreq   0
+  Job  1: startTime   0 - runTime 100 - ioFreq   0
+
+
+Final statistics:
+  Job  0: startTime   0 - response   0 - turnaround 170
+  Job  1: startTime   0 - response  10 - turnaround 200
+
+  Avg  1: startTime n/a - response 5.00 - turnaround 185.00
+
+
+
+==============================================================================
+==============================================================================
+==============================================================================
+==============================================================================
+
+Question 3: How would you configure the schedulaer parameters to behave just 
+like a round-robin schduler?
+
+./mlfq.py --numQueues=3 --jlist=0,50,9:0,50,9:0,50,9 --quantum=10 --stay --iotime=1 -c
+
+OPTIONS jobs 3
+OPTIONS queues 3
+
+Job List:
+  Job  0: startTime   0 - runTime  50 - ioFreq   9
+  Job  1: startTime   0 - runTime  50 - ioFreq   9
+  Job  2: startTime   0 - runTime  50 - ioFreq   9
+
+Final statistics:
+  Job  0: startTime   0 - response   0 - turnaround 140
+  Job  1: startTime   0 - response   9 - turnaround 145
+  Job  2: startTime   0 - response  18 - turnaround 150
+
+  Avg  2: startTime n/a - response 9.00 - turnaround 145.00
+
+
+==============================================================================
+==============================================================================
+==============================================================================
+==============================================================================
+
+Question 4: Craft a workload with two jobs and scheduler parameters so that one 
+job takes advantage of the older Rules 4a and 4b (turned on with the -S flag) 
+to game scheduler and obtain 99% of the CPU over a particular time interval.
+
+[ ] ./mlfq.py --numQueues=3 --jlist=0,30,0:0,100,9 --quantum=10 --stay --iotime=1 -S -c
+
+OPTIONS jobs 2
+OPTIONS queues 3
+
+Job List:
+  Job  0: startTime   0 - runTime  30 - ioFreq   0
+  Job  1: startTime   0 - runTime 100 - ioFreq   9
+
+Final statistics:
+  Job  0: startTime   0 - response   0 - turnaround 130
+  Job  1: startTime   0 - response  10 - turnaround 121
+
+  Avg  1: startTime n/a - response 5.00 - turnaround 125.50
+
+==============================================================================
+==============================================================================
+==============================================================================
+==============================================================================
+
+
