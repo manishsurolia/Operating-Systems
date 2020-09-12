@@ -1,0 +1,448 @@
+Question 1. Compute the solutions for simulations with 3 jobs and random seeds
+of 1, 2, and 3.
+
+Answer: Below are the computations for seeds 1,2 and 3.
+=======
+
+
+With Seeds : 1
+==============
+
+[ ] ./lottery.py -j 3 -s 1  
+ARG jlist 
+ARG jobs 3
+ARG maxlen 10
+ARG maxticket 100
+ARG quantum 1
+ARG seed 1
+
+Here is the job list, with the run time of each job: 
+  Job 0 ( length = 1, tickets = 84 )
+  Job 1 ( length = 7, tickets = 25 )
+  Job 2 ( length = 4, tickets = 44 )
+
+
+Here is the set of random numbers you will need (at most):
+Random 651593
+Random 788724
+Random 93859
+Random 28347
+Random 835765
+Random 432767
+Random 762280
+Random 2106
+Random 445387
+Random 721540
+Random 228762
+Random 945271
+
+
+  Job 0 ( length = 1, tickets = 84 )
+  Job 1 ( length = 7, tickets = 25 )
+  Job 2 ( length = 4, tickets = 44 )
+
+
+Solution :
+===========
+
+total_number_of_ticket = 84+25+44 = 153
+
+Random 651593 	==>  	651593 % 153 = 119 	=> run Job2
+Random 788724 	==>	788724 % 153 = 9  	=> rub Job0
+
+Now, Job0 is completed. so the new divisor is : 25 + 44 = 69
+
+Random 93859  	==> 	93859  % 69 = 19 	=> 19 comes under Job1. so, execute Job1.
+Random 28347 	==> 	28347  % 69 = 57 	=> 57 comes under Job2. so, execute Job2.
+Random 835765	==> 	835765 % 69 = 37 	=> 37 comes under Job2. so, execute Job2.
+Random 432767	==>	432767 % 69 = 68 	=> 68 comes under Job2. so, execute Job2.
+
+Now Job2 is completed. so the new divisor is : 25.
+
+Random 762280	==> 	762280 % 25 = 5 	=> 5 comes under Job1. so execute Job1.
+Random 2106	==> 	2106   % 25 = 6 	=> 6 comes under Job1. so execute Job1.
+Random 445387	==> 	445387 % 25 = 12   	=> 12 comes under Job1. so execute Job1.
+Random 721540	==> 	721540 % 25 = 15 	=> 15 comes under Job1. so execute Job1.
+Random 228762	==> 	228762 % 25 = 12  	=> 12 comes under Job1. so execute Job1.
+Random 945271	==>	945271 % 25 = 21  	=> 21 comes under Job1. so execute Job1.
+
+
+With Seeds : 2
+==============
+
+
+./lottery.py -j 3 -s 2
+ARG jlist 
+ARG jobs 3
+ARG maxlen 10
+ARG maxticket 100
+ARG quantum 1
+ARG seed 2
+
+Here is the job list, with the run time of each job: 
+  Job 0 ( length = 9, tickets = 94 )
+  Job 1 ( length = 8, tickets = 73 )
+  Job 2 ( length = 6, tickets = 30 )
+
+
+Here is the set of random numbers you will need (at most):
+Random 605944
+Random 606802
+Random 581204
+Random 158383
+Random 430670
+Random 393532
+Random 723012
+Random 994820
+Random 949396
+Random 544177
+Random 444854
+Random 268241
+Random 35924
+Random 27444
+Random 464894
+Random 318465
+Random 380015
+Random 891790
+Random 525753
+Random 560510
+Random 236123
+Random 23858
+Random 325143
+
+Solution :
+===========
+
+
+total_number_of_ticket = 94 + 73 + 30 = 197
+
+Random 605944	=>	605944 % 197 = 169	=> Run Job2	
+Random 606802	=> 	606802 % 197 = 42	=> Run Job0
+Random 581204	=>	581204 % 197 = 54	=> Run Job0
+Random 158383	=>	158383 % 197 = 192	=> Run Job2
+Random 430670	=>	430670 % 197 = 28	=> Run Job0
+Random 393532	=>	393532 % 197 = 123	=> Run Job1
+Random 723012	=> 	723012 % 197 = 22	=> Run Job0
+Random 994820	=> 	994820 % 197 = 167	=> Run Job1
+Random 949396	=>	949396 % 197 = 53	=> Run Job0
+Random 544177	=> 	544177 % 197 = 63	=> Run Job0
+Random 444854	=> 	444854 % 197 = 28	=> Run Job0
+Random 268241	=> 	268241 % 197 = 124	=> Run Job1
+Random 35924	=> 	35924 % 197 = 70	=> Run Job0
+Random 27444	=> 	27444 % 197 = 61	=> Run Job0
+
+Job0 has now completed, The new divisor is : 73 + 30 = 103
+Random 464894	=> 	464894 % 103 = 55	=> Run Job1
+Random 318465	=> 	318465 % 103 = 92	=> Run Job2
+Random 380015	=> 	380015 % 103 = 48	=> Run Job1
+Random 891790	=> 	891790 % 103 = 16	=> Run Job1
+Random 525753	=> 	525753 % 103 = 41	=> Run Job1
+Random 560510	=>	560510 % 103 = 87	=> Run Job2
+Random 236123	=>	236123 % 103 = 47	=> Run Job1
+
+Job1 has now completed, The new divisor is : 30
+Random 23858	=>	23858 % 30 = 8		=> Run Job2
+Random 325143	=> 	325143 % 30 = 3		=> Run Job2
+
+
+
+With Seeds : 3
+==============
+
+./lottery.py -j 3 -s 3
+ARG jlist 
+ARG jobs 3
+ARG maxlen 10
+ARG maxticket 100
+ARG quantum 1
+ARG seed 3
+
+Here is the job list, with the run time of each job: 
+  Job 0 ( length = 2, tickets = 54 )
+  Job 1 ( length = 3, tickets = 60 )
+  Job 2 ( length = 6, tickets = 6 )
+
+
+Here is the set of random numbers you will need (at most):
+Random 13168
+Random 837469
+Random 259354
+Random 234331
+Random 995645
+Random 470263
+Random 836462
+Random 476353
+Random 639068
+Random 150616
+Random 634861
+
+
+Solution :
+===========
+
+
+total_number_of_ticket = 54 + 60 + 6 = 120
+
+Random 13168	=> 13168 % 120 = 88	=> Run Job1
+Random 837469	=> 837469 % 120 = 109	=> Run Job1
+Random 259354	=> 259354 % 120 = 34	=> Run Job0
+Random 234331	=> 234331 % 120 = 91	=> Run Job1
+
+Job1 has now completed, The new divisor is : 54+6 = 60
+
+Random 995645	=> 995645 % 60 = 5 	=> Run Job0
+
+Job0 has now completed, The new divisor is : 6
+
+Random 470263	=> 470263 % 6 = 1	=> Run Job2
+Random 836462	=> 836462 % 6 = 2	=> Run Job2
+Random 476353	=> 476353 % 6 = 1	=> Run Job2
+Random 639068	=> 639068 % 6 = 2	=> Run Job2 
+Random 150616	=> 150616 % 6 = 4	=> Run Job2
+Random 634861	=> 634861 % 6 = 1	=> Run Job2
+
+=============================================================================
+=============================================================================
+=============================================================================
+=============================================================================
+
+
+Question : 2. Now run with two specific jobs: each of length 10, but one (job 0)
+with just 1 ticket and the other (job 1) with 100 (e.g., -l 10:1,10:100).
+What happens when the number of tickets is so imbalanced? Will
+job 0 ever run before job 1 completes? How often? In general, what
+does such a ticket imbalance do to the behavior of lottery scheduling?
+
+Solution:
+
+./lottery.py -l 10:1,10:100
+ARG jlist 10:1,10:100
+ARG jobs 3
+ARG maxlen 10
+ARG maxticket 100
+ARG quantum 1
+ARG seed 0
+
+Here is the job list, with the run time of each job: 
+  Job 0 ( length = 10, tickets = 1 )
+  Job 1 ( length = 10, tickets = 100 )
+
+
+Here is the set of random numbers you will need (at most):
+Random 844422
+Random 757955
+Random 420572
+Random 258917
+Random 511275
+Random 404934
+Random 783799
+Random 303313
+Random 476597
+Random 583382
+Random 908113
+Random 504687
+Random 281838
+Random 755804
+Random 618369
+Random 250506
+Random 909747
+Random 982786
+Random 810218
+Random 902166
+
+
+Total Number of tickets : 1 + 100 = 101
+
+Random 844422	=> 844422 % 101 = 62	=> Run Job1
+Random 757955	=> 757955 % 101 = 51	=> Run Job1
+Random 420572	=> 420572 % 101 = 8	=> Run Job1
+Random 258917	=> 258917 % 101 = 54	=> Run Job1
+Random 511275	=> 511275 % 101 = 13	=> Run Job1
+Random 404934	=> 404934 % 101	= 25	=> Run Job1
+Random 783799	=> 783799 % 101 = 39	=> Run Job1
+Random 303313	=> 303313 % 101 = 10	=> Run Job1
+Random 476597	=> 476597 % 101 = 79	=> Run Job1
+Random 583382	=> 583382 % 101 = 6	=> Run Job1
+
+Job1 has completed. Now, the total_number_of_tickets : 1
+
+Random 908113	=> 908113 % 1 = 0	=> Run Job0
+Random 504687	=> 504687 % 1 = 0	=> Run Job0
+Random 281838	=> 281838 % 1 = 0	=> Run Job0
+Random 755804	=> 755804 % 1 = 0 	=> Run Job0
+Random 618369	=> 618369 % 1 = 0	=> Run Job0
+Random 250506	=> 250506 % 1 = 0	=> Run Job0
+Random 909747	=> 909747 % 1 = 0	=> Run Job0
+Random 982786	=> 982786 % 1 = 0	=> Run Job0
+Random 810218	=> 810218 % 1 = 0	=> Run Job0
+Random 902166	=> 902166 % 1 = 0	=> Run Job0
+
+
+ticket imbalance, imbalances the execution of jobs in the system.
+As you can see above, since, Job1 had most of the tickets, only Job1 executed for first 10 times.
+and then Job0. It creates unfair share CPU. Wait time for the process, which has lesser tickets, increases.
+
+
+=============================================================================
+=============================================================================
+=============================================================================
+=============================================================================
+
+Question 3. When running with two jobs of length 100 and equal ticket 
+allocations of 100 (-l 100:100,100:100), how unfair is the scheduler?
+Run with some different random seeds to determine the (probabilistic) answer; 
+let unfairness be determined by how much earlier one
+job finishes than the other.
+
+
+./lottery.py -l 100:100,100:100 -c
+
+
+With this job0 finished just before last 8 time duruation was left for Job1.
+
+Lets, do it with different random numbers (with the use of different seed values).
+
+./lottery.py -l 100:100,100:100 -s 1 -c
+	
+	==> Job1 completed, when only last 4 duration was left for Job0.
+
+./lottery.py -l 100:100,100:100 -s 2 -c
+
+	==> Job1 completed, when only last 10 duration was left for Job0.
+
+./lottery.py -l 100:100,100:100 -s 3 -c
+
+	==> Job0 completed, when only last 4 duration was left for Job1.
+
+./lottery.py -l 100:100,100:100 -s 4 -c
+	
+	==> Job1 completed, when only last 1 duration was left for Job0.
+
+
+This reflects that if the provided number of tickets are same, then the chances 
+of fairness in lottery schduling is quite high.
+
+=============================================================================
+=============================================================================
+=============================================================================
+=============================================================================
+
+Question 4. How does your answer to the previous question change as the quantum 
+size (-q) gets larger?
+
+With High quamtum size also, it remains quite fair as below. 
+Actually it becomes more fair scheduler. Wait time for processes get lesser.
+
+[ ] ./lottery.py -l 100:100,100:100 -s 1 --quantum=50 -c
+ARG jlist 100:100,100:100
+ARG jobs 3
+ARG maxlen 10
+ARG maxticket 100
+ARG quantum 50
+ARG seed 1
+
+Here is the job list, with the run time of each job: 
+  Job 0 ( length = 100, tickets = 100 )
+  Job 1 ( length = 100, tickets = 100 )
+
+
+** Solutions **
+
+Random 134364 -> Winning ticket 164 (of 200) -> Run 1
+  Jobs:  (  job:0 timeleft:100 tix:100 )   (* job:1 timeleft:100 tix:100 )  
+Random 847434 -> Winning ticket 34 (of 200) -> Run 0
+  Jobs:  (* job:0 timeleft:100 tix:100 )   (  job:1 timeleft:50 tix:100 )  
+Random 763775 -> Winning ticket 175 (of 200) -> Run 1
+  Jobs:  (  job:0 timeleft:50 tix:100 )   (* job:1 timeleft:50 tix:100 )  
+--> JOB 1 DONE at time 150
+Random 255069 -> Winning ticket 69 (of 100) -> Run 0
+  Jobs:  (* job:0 timeleft:50 tix:100 )   (  job:1 timeleft:0 tix:--- )  
+--> JOB 0 DONE at time 200
+
+
+[ ] ./lottery.py -l 100:100,100:100 -s 1 --quantum=60 -c
+ARG jlist 100:100,100:100
+ARG jobs 3
+ARG maxlen 10
+ARG maxticket 100
+ARG quantum 60
+ARG seed 1
+
+Here is the job list, with the run time of each job: 
+  Job 0 ( length = 100, tickets = 100 )
+  Job 1 ( length = 100, tickets = 100 )
+
+
+** Solutions **
+
+Random 134364 -> Winning ticket 164 (of 200) -> Run 1
+  Jobs:  (  job:0 timeleft:100 tix:100 )   (* job:1 timeleft:100 tix:100 )  
+Random 847434 -> Winning ticket 34 (of 200) -> Run 0
+  Jobs:  (* job:0 timeleft:100 tix:100 )   (  job:1 timeleft:40 tix:100 )  
+Random 763775 -> Winning ticket 175 (of 200) -> Run 1
+  Jobs:  (  job:0 timeleft:40 tix:100 )   (* job:1 timeleft:40 tix:100 )  
+--> JOB 1 DONE at time 180
+Random 255069 -> Winning ticket 69 (of 100) -> Run 0
+  Jobs:  (* job:0 timeleft:40 tix:100 )   (  job:1 timeleft:0 tix:--- )  
+--> JOB 0 DONE at time 240
+
+
+[ ] ./lottery.py -l 100:100,100:100 -s 1 --quantum=80 -c
+ARG jlist 100:100,100:100
+ARG jobs 3
+ARG maxlen 10
+ARG maxticket 100
+ARG quantum 80
+ARG seed 1
+
+Here is the job list, with the run time of each job: 
+  Job 0 ( length = 100, tickets = 100 )
+  Job 1 ( length = 100, tickets = 100 )
+
+
+** Solutions **
+
+Random 134364 -> Winning ticket 164 (of 200) -> Run 1
+  Jobs:  (  job:0 timeleft:100 tix:100 )   (* job:1 timeleft:100 tix:100 )  
+Random 847434 -> Winning ticket 34 (of 200) -> Run 0
+  Jobs:  (* job:0 timeleft:100 tix:100 )   (  job:1 timeleft:20 tix:100 )  
+Random 763775 -> Winning ticket 175 (of 200) -> Run 1
+  Jobs:  (  job:0 timeleft:20 tix:100 )   (* job:1 timeleft:20 tix:100 )  
+--> JOB 1 DONE at time 240
+Random 255069 -> Winning ticket 69 (of 100) -> Run 0
+  Jobs:  (* job:0 timeleft:20 tix:100 )   (  job:1 timeleft:0 tix:--- )  
+--> JOB 0 DONE at time 320
+
+
+[ ] ./lottery.py -l 100:100,100:100 -s 1 --quantum=95 -c
+ARG jlist 100:100,100:100
+ARG jobs 3
+ARG maxlen 10
+ARG maxticket 100
+ARG quantum 95
+ARG seed 1
+
+Here is the job list, with the run time of each job: 
+  Job 0 ( length = 100, tickets = 100 )
+  Job 1 ( length = 100, tickets = 100 )
+
+
+** Solutions **
+
+Random 134364 -> Winning ticket 164 (of 200) -> Run 1
+  Jobs:  (  job:0 timeleft:100 tix:100 )   (* job:1 timeleft:100 tix:100 )  
+Random 847434 -> Winning ticket 34 (of 200) -> Run 0
+  Jobs:  (* job:0 timeleft:100 tix:100 )   (  job:1 timeleft:5 tix:100 )  
+Random 763775 -> Winning ticket 175 (of 200) -> Run 1
+  Jobs:  (  job:0 timeleft:5 tix:100 )   (* job:1 timeleft:5 tix:100 )  
+--> JOB 1 DONE at time 285
+Random 255069 -> Winning ticket 69 (of 100) -> Run 0
+  Jobs:  (* job:0 timeleft:5 tix:100 )   (  job:1 timeleft:0 tix:--- )  
+--> JOB 0 DONE at time 380
+
+=============================================================================
+=============================================================================
+=============================================================================
+=============================================================================
+
+
