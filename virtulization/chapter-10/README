@@ -2548,7 +2548,7 @@ modify some common data.
 which basically means, that each CPU has its own schduling mechanism gonig on, 
 and it takes job from other CPU queues, only when it runs out of any job.
 
-Also, other than lock contention, if most processor target to run on the same 
+Also, other than lock contention, if most jobs target to run on the same 
 processor, they get oppotunity to get benefit from cache warm up also.
 
 see below comparison of 3 jobs running on 2 CPU's (with single queue, and with 
