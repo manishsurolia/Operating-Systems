@@ -1,0 +1,8 @@
+
+[ ] gcc  wrong_add_to_free.c  -o wrong_add_to_free
+[ ] ./wrong_add_to_free 
+
+Value at index 0 (before free) is data[0]: 10
+free(): invalid pointer
+Aborted (core dumped)
+

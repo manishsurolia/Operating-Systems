@@ -1,0 +1,4 @@
+ 
+[ ]  gcc null.c -o null
+[ ]  ./null 
+Segmentation fault (core dumped)

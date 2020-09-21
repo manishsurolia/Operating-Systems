@@ -1,0 +1,32 @@
+ 
+[ ]  gcc -g null.c -o null
+[ ]  valgrind --leak-check=yes ./null 
+==13367== Memcheck, a memory error detector
+==13367== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==13367== Using Valgrind-3.15.0 and LibVEX; rerun with -h for copyright info
+==13367== Command: ./null
+==13367== 
+==13367== Invalid read of size 4
+==13367==    at 0x109144: main (null.c:11)
+==13367==  Address 0x0 is not stack'd, malloc'd or (recently) free'd
+==13367== 
+==13367== 
+==13367== Process terminating with default action of signal 11 (SIGSEGV)
+==13367==  Access not within mapped region at address 0x0
+==13367==    at 0x109144: main (null.c:11)
+==13367==  If you believe this happened as a result of a stack
+==13367==  overflow in your program's main thread (unlikely but
+==13367==  possible), you can try to increase the size of the
+==13367==  main thread stack using the --main-stacksize= flag.
+==13367==  The main thread stack size used in this run was 8388608.
+==13367== 
+==13367== HEAP SUMMARY:
+==13367==     in use at exit: 0 bytes in 0 blocks
+==13367==   total heap usage: 0 allocs, 0 frees, 0 bytes allocated
+==13367== 
+==13367== All heap blocks were freed -- no leaks are possible
+==13367== 
+==13367== For lists of detected and suppressed errors, rerun with: -s
+==13367== ERROR SUMMARY: 1 errors from 1 contexts (suppressed: 0 from 0)
+Segmentation fault (core dumped)
+
