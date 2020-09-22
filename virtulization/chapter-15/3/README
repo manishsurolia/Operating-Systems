@@ -1,0 +1,33 @@
+3. Run with these flags: -s 1 -n 10 -l 100. What is the maximum value that 
+base can be set to, such that the address space still
+fits into physical memory in its entirety?
+
+Answer : As the length(-l) of the process is 100, then the process should get 
+at least 100 bytes of memory in the physical memory.
+
+so, the bound register should be as, that it should fit in the physical memory
+(16k) in its entirety.
+
+[ ] python2 relocation.py  -s 1 -n 10 -l 1000 -b 1000 -c
+
+ARG seed 1
+ARG address space size 1k
+ARG phys mem size 16k
+
+Base-and-Bounds register information:
+
+  Base   : 0x000003e8 (decimal 1000)
+  Limit  : 1000
+
+Virtual Address Trace
+  VA  0: 0x00000089 (decimal:  137) --> VALID: 0x00000471 (decimal: 1137)
+  VA  1: 0x00000363 (decimal:  867) --> VALID: 0x0000074b (decimal: 1867)
+  VA  2: 0x0000030e (decimal:  782) --> VALID: 0x000006f6 (decimal: 1782)
+  VA  3: 0x00000105 (decimal:  261) --> VALID: 0x000004ed (decimal: 1261)
+  VA  4: 0x000001fb (decimal:  507) --> VALID: 0x000005e3 (decimal: 1507)
+  VA  5: 0x000001cc (decimal:  460) --> VALID: 0x000005b4 (decimal: 1460)
+  VA  6: 0x0000029b (decimal:  667) --> VALID: 0x00000683 (decimal: 1667)
+  VA  7: 0x00000327 (decimal:  807) --> VALID: 0x0000070f (decimal: 1807)
+  VA  8: 0x00000060 (decimal:   96) --> VALID: 0x00000448 (decimal: 1096)
+  VA  9: 0x0000001d (decimal:   29) --> VALID: 0x00000405 (decimal: 1029)
+

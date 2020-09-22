@@ -1,0 +1,26 @@
+Question 4 : Run some of the same problems above, but with larger address
+spaces (-a) and physical memories (-p).
+
+
+[ ] python2 relocation.py  -p 1g -n 10 -b 10000 -l 3000 -c -s 10
+
+ARG seed 10
+ARG address space size 1k
+ARG phys mem size 1g
+
+Base-and-Bounds register information:
+
+  Base   : 0x00002710 (decimal 10000)
+  Limit  : 3000
+
+Virtual Address Trace
+  VA  0: 0x00000249 (decimal:  585) --> VALID: 0x00002959 (decimal: 10585)
+  VA  1: 0x000001b7 (decimal:  439) --> VALID: 0x000028c7 (decimal: 10439)
+  VA  2: 0x0000024f (decimal:  591) --> VALID: 0x0000295f (decimal: 10591)
+  VA  3: 0x000000d3 (decimal:  211) --> VALID: 0x000027e3 (decimal: 10211)
+  VA  4: 0x00000340 (decimal:  832) --> VALID: 0x00002a50 (decimal: 10832)
+  VA  5: 0x0000034b (decimal:  843) --> VALID: 0x00002a5b (decimal: 10843)
+  VA  6: 0x0000029d (decimal:  669) --> VALID: 0x000029ad (decimal: 10669)
+  VA  7: 0x000000a4 (decimal:  164) --> VALID: 0x000027b4 (decimal: 10164)
+  VA  8: 0x00000215 (decimal:  533) --> VALID: 0x00002925 (decimal: 10533)
+  VA  9: 0x0000014f (decimal:  335) --> VALID: 0x0000285f (decimal: 10335)

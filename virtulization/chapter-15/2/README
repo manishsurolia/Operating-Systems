@@ -1,0 +1,31 @@
+Question 2: Run with these flags: -s 0 -n 10. What value do you have set
+-l (the bounds register) to in order to ensure that all the generated
+virtual addresses are within bounds?
+
+
+Setting up '-l' to 2048 as the address space '-a' is with size of 2k.
+
+[ ]  python2 relocation.py  -s 0 -n 10 -a 2k -l 2048 -c
+
+ARG seed 0
+ARG address space size 2k
+ARG phys mem size 16k
+
+Base-and-Bounds register information:
+
+  Base   : 0x0000360b (decimal 13835)
+  Limit  : 2048
+
+Virtual Address Trace
+  VA  0: 0x00000610 (decimal: 1552) --> VALID: 0x00003c1b (decimal: 15387)
+  VA  1: 0x0000035d (decimal:  861) --> VALID: 0x00003968 (decimal: 14696)
+  VA  2: 0x00000212 (decimal:  530) --> VALID: 0x0000381d (decimal: 14365)
+  VA  3: 0x00000417 (decimal: 1047) --> VALID: 0x00003a22 (decimal: 14882)
+  VA  4: 0x0000033d (decimal:  829) --> VALID: 0x00003948 (decimal: 14664)
+  VA  5: 0x00000645 (decimal: 1605) --> VALID: 0x00003c50 (decimal: 15440)
+  VA  6: 0x0000026d (decimal:  621) --> VALID: 0x00003878 (decimal: 14456)
+  VA  7: 0x000003d0 (decimal:  976) --> VALID: 0x000039db (decimal: 14811)
+  VA  8: 0x000004aa (decimal: 1194) --> VALID: 0x00003ab5 (decimal: 15029)
+  VA  9: 0x00000743 (decimal: 1859) --> VALID: 0x00003d4e (decimal: 15694)
+
+
