@@ -1,0 +1,173 @@
+If you are a linux user, you have definitely heard about Linux swap, but you may
+not know exactly what it is and how to use it.
+
+Time to change that!!
+
+You probably know that Linux swap is somehow related to RAM and swappiness can
+affect your system performance. 
+
+We will learn:
+
+- What is Linux swap?
+- Do you need Linux swap?
+- What are swap partition and swap file?
+- How to create a swap file?
+- What is swappiness and how to adjust it?
+
+
+- What is Linux swap?
+---------------------
+
+    The linux kernel usually use your RAM memory to store processes and kernel
+code itself.
+
+When there is no enough RAM space, the Linuz kernel takes some of data from the
+RAM and writes it to the swap space on the hard disk drive. This is called the
+swapping process.
+
+This way your linux system can release some RAM space and doesn't crash due to
+lack of memory.
+
+So, Linuz swap is a very useful way to extend the RAM because it provides the
+necessary additional memory when the RAM space has been exhausted and a process
+has to be continued.
+
+That is why when you install a Linux distribution, the installation wizard
+usually asks you to assign a space for the swap partition.
+
+
+- Do you need swap?
+-------------------
+
+    This is a question many novice users ask themselves when they begin to
+discover Linux.
+
+In fact, this will depend on the use and amount of RAM your computer has.
+Nevertheless, having a swap space is desirable even if you have a lot of RAM.
+
+For example, usually when your RAM gets full and Linux kernel has no space to
+write into, you system will crash.
+
+On the other hand, if you have a swap space, it will be used by the Linux kernel
+and your system will keep working, though much slower.
+
+So, it is always safer to have a swap space.
+
+Note : Swap space has on disadvantage - It is much slower than RAM.
+
+So, adding a swap space wont make your computer faster, it will only help to
+overcome some limitations posed by the RAM size.
+
+- What are swap partition and swap file?
+----------------------------------------
+
+    In linux, there are two options for a swap space :
+
+        (1) Swap partition.
+        (2) A swap file.
+
+(1) Swap Partition : Swap partition is just part of your hard drive which is
+reserved for a swap space. It is sort of hard coded in your hard drive. So, is
+usually not that easy to change. 
+
+We create swap partition during a Linux distribution installation.
+
+There are some common practises, we can use,
+    - If your computer has 1Gb of RAM space or less, the swap partition
+should be twice the size of the RAM.
+    - If you have between 2Gb to 4Gb of RAM, the size of swap partition should
+be equal to the RAM.
+    - For RAM of 8 Gb, swap can be half of the RAM.
+    - Finally, if you have more than 8 Gb of RAM, then it is enough to have
+2-4 Gb of swap space.
+
+But everything depends on your use case.
+
+You can check the size of your swap space, you can run below command.
+
+[ ] swapon
+NAME      TYPE   SIZE  USED PRIO
+/swapfile file 448.5M 63.5M   -2
+
+Note : You can use 'swapon'/'swapoff' to enable/disable the swapping. Check
+manual pages for both for more details.
+
+
+(2) A swap file: Alternatively to a swap partition, you can create a Linux swap
+File after the OS installation.
+
+The modern Linux kernel allows swapping to a swap file instead of a swap
+partition.
+
+A swap file has an advantage over a swap partition that you can change the size
+of your swap anytime simply by changing a swap file size.
+
+If you want to create a swap file, first run this command.
+
+(1) First create a file of 1 Gig
+[ ] sudo fallocate -l 1G /swapfile
+
+(2) Set the file persmissions
+[ ] sudo chmod 600 /swapfile 
+
+(3) Make it a swap file
+[ ] sudo mkswap /swapfile 
+Setting up swapspace version 1, size = 1024 MiB (1073737728 bytes)
+no label, UUID=c5c09588-d681-47aa-ada7-0dcc5a87d191
+
+(4) Switch on the swapping on this file
+[ ]  sudo swapon /swapfile
+
+(5) Make the changes permanent
+Add below lines in the file '/etc/fstab'
+
+#swap file                                                                          
+/swapfile   swap    swap    defaults    0   0
+
+[ ] sudo vim /etc/fstab <-- open this file and add above 2 lines.
+ 
+(6) Check your changes
+[ ] sudo free -h
+              total        used        free      shared  buff/cache   available
+Mem:          980Mi       467Mi       217Mi       8.0Mi       295Mi       361Mi
+Swap:         1.0Gi          0B       1.0Gi
+
+(7) Reboot the device to make it effective.
+
+Note : If you want to make any change in the swap file, you can first switchoff
+the swap property of the swap file, the delete it and then create new one as
+above. 
+
+To first switch off the swapping you can use.
+
+[ ] sudo swapoff -v /swapfile
+
+- What is swappiness and how to adjust it?
+------------------------------------------
+
+Swappiness is a property of linux kernel, that defines, how often this swap file
+will be used.
+
+As you already know RAM is always faster than hard disk drive.
+
+Whenever your process is operating more on data, there are chances that Linux
+will put some of your process data in the hard disk(swapping). If you want to
+reduce this swapping you an adjust the swappiness.
+
+Small swappiness == use more RAM
+
+Normally, the default swapiness value is 60. Smaller the value, lesser swaps
+will be done.
+
+
+
+
+
+
+
+
+
+
+
+
+ 
