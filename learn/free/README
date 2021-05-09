@@ -1,0 +1,26 @@
+This example, just creates a process, which allocates some Memory(500Mb), and we
+check the 'free' command of linux to see how to much RAM and swap memory is used
+for this process.
+
+This program 'memory-user.c' allocates 900Mb of memory dynamically and
+continuously updates all its space.
+
+Start this program and check the command 'free' in other window.
+
+Before starting the program (./a.out)
+-------------------------------------
+[ ] free -h
+              total        used        free      shared  buff/cache   available
+Mem:          980Mi       125Mi       804Mi       0.0Ki        51Mi       760Mi
+Swap:         1.0Gi       315Mi       708Mi
+
+After starting the program (./a.out)
+------------------------------------
+[ ] free -h
+              total        used        free      shared  buff/cache   available
+Mem:          980Mi       876Mi        68Mi       0.0Ki        35Mi        17Mi
+Swap:         1.0Gi       422Mi       601Mi
+
+There is a clear increment in the used RAM as well as in the swap memory.
+
+Current swapiness of the system is 10.
