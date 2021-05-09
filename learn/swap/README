@@ -4,7 +4,7 @@ not know exactly what it is and how to use it.
 Time to change that!!
 
 You probably know that Linux swap is somehow related to RAM and swappiness can
-affect your system performance. 
+affect your system performance.
 
 We will learn:
 
@@ -21,14 +21,14 @@ We will learn:
     The linux kernel usually use your RAM memory to store processes and kernel
 code itself.
 
-When there is no enough RAM space, the Linuz kernel takes some of data from the
+When there is no enough RAM space, the linux kernel takes some of data from the
 RAM and writes it to the swap space on the hard disk drive. This is called the
 swapping process.
 
 This way your linux system can release some RAM space and doesn't crash due to
 lack of memory.
 
-So, Linuz swap is a very useful way to extend the RAM because it provides the
+So, linux swap is a very useful way to extend the RAM because it provides the
 necessary additional memory when the RAM space has been exhausted and a process
 has to be continued.
 
@@ -68,7 +68,7 @@ overcome some limitations posed by the RAM size.
 
 (1) Swap Partition : Swap partition is just part of your hard drive which is
 reserved for a swap space. It is sort of hard coded in your hard drive. So, is
-usually not that easy to change. 
+usually not that easy to change.
 
 We create swap partition during a Linux distribution installation.
 
@@ -108,10 +108,10 @@ If you want to create a swap file, first run this command.
 [ ] sudo fallocate -l 1G /swapfile
 
 (2) Set the file persmissions
-[ ] sudo chmod 600 /swapfile 
+[ ] sudo chmod 600 /swapfile
 
 (3) Make it a swap file
-[ ] sudo mkswap /swapfile 
+[ ] sudo mkswap /swapfile
 Setting up swapspace version 1, size = 1024 MiB (1073737728 bytes)
 no label, UUID=c5c09588-d681-47aa-ada7-0dcc5a87d191
 
@@ -121,11 +121,11 @@ no label, UUID=c5c09588-d681-47aa-ada7-0dcc5a87d191
 (5) Make the changes permanent
 Add below lines in the file '/etc/fstab'
 
-#swap file                                                                          
+#swap file
 /swapfile   swap    swap    defaults    0   0
 
 [ ] sudo vim /etc/fstab <-- open this file and add above 2 lines.
- 
+
 (6) Check your changes
 [ ] sudo free -h
               total        used        free      shared  buff/cache   available
@@ -136,7 +136,7 @@ Swap:         1.0Gi          0B       1.0Gi
 
 Note : If you want to make any change in the swap file, you can first switchoff
 the swap property of the swap file, the delete it and then create new one as
-above. 
+above.
 
 To first switch off the swapping you can use.
 
@@ -159,15 +159,26 @@ Small swappiness == use more RAM
 Normally, the default swapiness value is 60. Smaller the value, lesser swaps
 will be done.
 
+This swappiness, contributes to the 'swap_tendency'. This 'swap_tendency' is
+used in linux kernel to decide whether to do swap or not.
 
+swap_tendency = (mapped_ratio/2) + distress + vm_swappiness;
 
+To check the swapiness value, run below command:
 
+[ ] cat /proc/sys/vm/swappiness
+60
 
+You will see the deafult value as 60.
 
+If you want to modify the default value, you need to edit the file
+'etc/sysctl.conf' and add the following.
 
+vm.swappiness=10
 
+10 is most commonly recommonded value. Also, this setting is required when you
+have more than 4Gb of RAM.
 
+Again, in order to apply these changes you need to reboot the system.
 
-
-
- 
+After reboot '/proc/sys/vm/swappiness' will show swappiness as 10.
