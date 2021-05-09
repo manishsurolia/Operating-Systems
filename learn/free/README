@@ -5,6 +5,10 @@ for this process.
 This program 'memory-user.c' allocates 900Mb of memory dynamically and
 continuously updates all its space.
 
+Compile it as below:
+
+[ ] gcc memory-user.c
+
 Start this program and check the command 'free' in other window.
 
 Before starting the program (./a.out)
