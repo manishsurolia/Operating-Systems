@@ -1,0 +1,57 @@
+In Linux or any other operating system, memory allocator/manager is needed for
+the management of freely available memory.
+
+We have 2 very obvious problems of memory management in any OS,
+    1. A process has a dynamic memory available as heap, but since there can be
+       so many allocations/de-allocations of different sizes of memory from the
+       process code at different times during execution of a process. Hence, how
+       do we manage this memory so that we can accommodate most of the dynamic
+       allocation requests without asking for more memory from the kernel.
+
+
+    2. At kernel level, since processes gets created/deleted at random time for
+       random sizes, memory needs to be allocated/deallocated to each process at
+       run time for different sizes. Also, Since a process works on the concept
+       of virtual memory (where a process can be dynamically moved from one
+       place to another in RAM by kernel, and addresses are just the offsets
+       from their segment boundaries).
+
+To solve the above problems, we need to manage the memory in efficient way.
+One way, which has been already in use for long time is free-list.
+
+Free-list, is a way to manage the memory where a link list contains the nodes of
+freely available memory, and whenever a dynamic memory request (using 'malloc')
+is done, the free-list code just go through this list and find the best possible
+memory address which satisfies the request.
+
+Note : In case of process level memory management, this free list is generally
+created in the available memory itself.
+
+This link list on a freely available memory can be created with a below simple
+structure.
+
+typedef struct __node_t {
+    int size;
+    struct __node_t *next;
+} node_t;
+
+Suppose, we are writing our memory management code to manage 4KB of heap.
+and the above structure is going to take 8 bytes(assuming the size of int is 4
+and the size of a pointer is also 4), and the remaining space is available for
+the allocation.
+
+   
+  Virtual
+  Address
+  (16KB)
+    <- 8 bytes---><----- The rest of 4 KB Chunk------------------->
+    ---------------------------------........----------------------
+    | Size = 4088 |                                               |
+    | next = NULL |                                               |
+    ---------------------------------........----------------------
+    <-------------------4KB--------------------------------------->
+
+ 
+Note : In Linux, a process can request the kernel for more memory using 'mmap'
+system call. Hence, we will use 'mmap' call here to request for heap memory and
+then we will write our memory management software on top of that.
