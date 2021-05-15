@@ -18,7 +18,7 @@ static void update_free_list (node_t *list)
     head = list;
 }
 
-static void * get_heap_from_kernel(void) {
+static void * get_heap_from_kernel (void) {
     static int count;
     node_t *heap = NULL;
     if (!count) { // For now, the request will be served only once for 4KB.
@@ -43,8 +43,8 @@ static void * get_heap_from_kernel(void) {
  * Once sufficient memory is found in a node, it shifts the node header to
  * either by the requested size or to the next node.
  */
-static node_t * malloc_internal(node_t *p, int requested_size, void **output,
-                         int *allocated_size)
+static node_t * malloc_internal (node_t *p, int requested_size, void **output,
+                                 int *allocated_size)
 {
     int available_size;
     int remaining_size;
@@ -107,9 +107,9 @@ void * my_malloc (int size)
     return ret;
 }
 
-int main(int argc, char **argv)
+int main (int argc, char **argv)
 {
-    while(1) {
+    while (1) {
         if (!my_malloc(100)) {
             break;
         } else {
@@ -117,7 +117,7 @@ int main(int argc, char **argv)
         }
     }
 
-    while(1) {
+    while (1) {
         if (!my_malloc(50)) {
             break;
         } else {
@@ -125,7 +125,7 @@ int main(int argc, char **argv)
         }
     }
 
-    while(1) {
+    while (1) {
         if (!my_malloc(1)) {
             break;
         } else {

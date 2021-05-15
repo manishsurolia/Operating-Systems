@@ -55,3 +55,5 @@ the allocation.
 Note : In Linux, a process can request the kernel for more memory using 'mmap'
 system call. Hence, we will use 'mmap' call here to request for heap memory and
 then we will write our memory management software on top of that.
+
+Reference : https://pages.cs.wisc.edu/~remzi/OSTEP/vm-freespace.pdf
