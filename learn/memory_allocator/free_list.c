@@ -48,6 +48,18 @@ void print_total_free_space (void)
             total_free_space_internal(get_free_list()));
 }
 
+void list_coalesce(node_t *list)
+{
+    node_t *next;
+    if (list) {
+        next = (void *)list + list->size;
+        if (next && (next->magic == MAGIC_HEADER)) {
+            list->size = list->size + next->size;
+            list->next = next->next;
+        }
+    }
+}
+
 static void * get_heap_from_kernel (void) {
     static int count;
     node_t *heap = NULL;
@@ -58,6 +70,7 @@ static void * get_heap_from_kernel (void) {
             perror(strerror(errno));
             exit (1);
         } else {
+            heap->magic = MAGIC_HEADER;
             heap->size = HEAP_SIZE;
             heap->next = NULL;
         }
@@ -92,6 +105,7 @@ static node_t * malloc_internal (node_t *p, int requested_size, void **output,
                 *allocated_size = requested_size;
                 next = p->next;
                 p = (void *)p + (*allocated_size);
+                p->magic = MAGIC_HEADER;
                 p->size = remaining_size;
                 p->next = next;
             } else {
@@ -156,6 +170,26 @@ void my_free (void *p)
     }
 }
 
+void my_free_with_coalesce (void *p)
+{
+    int size;
+    if (!p) {
+        return;
+    }
+
+    p = p - sizeof(header_t);
+    size = ((header_t *)p)->size;
+
+    if (((header_t *)p)->magic == MAGIC_HEADER) {
+        ((node_t *)p)->size = size;
+        ((node_t *)p)->next = get_free_list();
+        update_free_list(p);
+        list_coalesce(p);
+    } else {
+        exit (1); // Heap corrupted. Terminate the process.
+    }
+}
+
 
 int main (int argc, char **argv)
 {
@@ -165,6 +199,7 @@ int main (int argc, char **argv)
     if (ptr = my_malloc(100)) {
         printf("100 bytes allocated.\n");
         my_free(ptr);
+        //my_free_with_coalesce(ptr);
         printf("100 bytes freed.\n");
         print_free_list();
         print_total_free_space();
@@ -176,6 +211,7 @@ int main (int argc, char **argv)
     if (ptr = my_malloc(200)) {
         printf("200 bytes allocated.\n");
         my_free(ptr);
+        //my_free_with_coalesce(ptr);
         printf("200 bytes freed.\n");
         print_free_list();
         print_total_free_space();
@@ -187,6 +223,7 @@ int main (int argc, char **argv)
     if (ptr = my_malloc(500)) {
         printf("500 bytes allocated.\n");
         my_free(ptr);
+        //my_free_with_coalesce(ptr);
         printf("500 bytes freed.\n");
         print_free_list();
         print_total_free_space();
@@ -198,6 +235,7 @@ int main (int argc, char **argv)
     if (ptr = my_malloc(1000)) {
         printf("1000 bytes allocated.\n");
         my_free(ptr);
+        //my_free_with_coalesce(ptr);
         printf("1000 bytes freed.\n");
         print_free_list();
         print_total_free_space();
@@ -209,6 +247,7 @@ int main (int argc, char **argv)
     if (ptr = my_malloc(50)) {
         printf("50 bytes allocated.\n");
         my_free(ptr);
+        //my_free_with_coalesce(ptr);
         printf("50 bytes freed.\n");
         print_free_list();
         print_total_free_space();
@@ -220,6 +259,7 @@ int main (int argc, char **argv)
     if (ptr = my_malloc(1000)) {
         printf("1000 bytes allocated.\n");
         my_free(ptr);
+        //my_free_with_coalesce(ptr);
         printf("1000 bytes freed.\n");
         print_free_list();
         print_total_free_space();
@@ -231,6 +271,7 @@ int main (int argc, char **argv)
     if (ptr = my_malloc(2000)) {
         printf("2000 bytes allocated.\n");
         my_free(ptr);
+        //my_free_with_coalesce(ptr);
         printf("2000 bytes freed.\n");
         print_free_list();
         print_total_free_space();

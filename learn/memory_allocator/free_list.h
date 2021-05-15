@@ -16,6 +16,7 @@ typedef struct __header_t {
 } header_t;
 
 typedef struct __node_t {
+    int magic;
     int size;
     struct __node_t *next;
 } node_t;
