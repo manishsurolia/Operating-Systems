@@ -18,6 +18,36 @@ static void update_free_list (node_t *list)
     head = list;
 }
 
+static void print_free_list_internal (node_t *list)
+{
+    if (list) {
+        printf("Address : %p, Size : %d, next : %p\n", list, list->size,
+                list->next);
+        print_free_list_internal(list->next);
+    }
+}
+
+void print_free_list (void)
+{
+    print_free_list_internal(get_free_list());
+}
+
+static unsigned long total_free_space_internal (node_t *list)
+{
+    if (!list) {
+        return 0;
+    }
+
+    return (list->size + total_free_space_internal(list->next));
+}
+
+
+void print_total_free_space (void)
+{
+    printf("Total free space : %lu\n",
+            total_free_space_internal(get_free_list()));
+}
+
 static void * get_heap_from_kernel (void) {
     static int count;
     node_t *heap = NULL;
@@ -107,31 +137,106 @@ void * my_malloc (int size)
     return ret;
 }
 
+void my_free (void *p)
+{
+    int size;
+    if (!p) {
+        return;
+    }
+
+    p = p - sizeof(header_t);
+    size = ((header_t *)p)->size;
+
+    if (((header_t *)p)->magic == MAGIC_HEADER) {
+        ((node_t *)p)->size = size;
+        ((node_t *)p)->next = get_free_list();
+        update_free_list(p);
+    } else {
+        exit (1); // Heap corrupted. Terminate the process.
+    }
+}
+
+
 int main (int argc, char **argv)
 {
-    while (1) {
-        if (!my_malloc(100)) {
-            break;
-        } else {
-            printf("100 bytes allocted.\n");
-        }
-    }
+    void *ptr;
 
-    while (1) {
-        if (!my_malloc(50)) {
-            break;
-        } else {
-            printf("50 bytes allocted.\n");
-        }
+    printf("===========================================================\n");
+    if (ptr = my_malloc(100)) {
+        printf("100 bytes allocated.\n");
+        my_free(ptr);
+        printf("100 bytes freed.\n");
+        print_free_list();
+        print_total_free_space();
+    } else {
+        printf("100 bytes allocation failed.\n");
     }
+    printf("===========================================================\n");
 
-    while (1) {
-        if (!my_malloc(1)) {
-            break;
-        } else {
-            printf("1 byte allocted.\n");
-        }
+    if (ptr = my_malloc(200)) {
+        printf("200 bytes allocated.\n");
+        my_free(ptr);
+        printf("200 bytes freed.\n");
+        print_free_list();
+        print_total_free_space();
+    } else {
+        printf("200 bytes allocation failed.\n");
     }
+    printf("===========================================================\n");
 
+    if (ptr = my_malloc(500)) {
+        printf("500 bytes allocated.\n");
+        my_free(ptr);
+        printf("500 bytes freed.\n");
+        print_free_list();
+        print_total_free_space();
+    } else {
+        printf("500 bytes allocation failed.\n");
+    }
+    printf("===========================================================\n");
+
+    if (ptr = my_malloc(1000)) {
+        printf("1000 bytes allocated.\n");
+        my_free(ptr);
+        printf("1000 bytes freed.\n");
+        print_free_list();
+        print_total_free_space();
+    } else {
+        printf("1000 bytes allocation failed.\n");
+    }
+    printf("===========================================================\n");
+
+    if (ptr = my_malloc(50)) {
+        printf("50 bytes allocated.\n");
+        my_free(ptr);
+        printf("50 bytes freed.\n");
+        print_free_list();
+        print_total_free_space();
+    } else {
+        printf("50 bytes allocation failed.\n");
+    }
+    printf("===========================================================\n");
+
+    if (ptr = my_malloc(1000)) {
+        printf("1000 bytes allocated.\n");
+        my_free(ptr);
+        printf("1000 bytes freed.\n");
+        print_free_list();
+        print_total_free_space();
+    } else {
+        printf("1000 bytes allocation failed.\n");
+    }
+    printf("===========================================================\n");
+
+    if (ptr = my_malloc(2000)) {
+        printf("2000 bytes allocated.\n");
+        my_free(ptr);
+        printf("2000 bytes freed.\n");
+        print_free_list();
+        print_total_free_space();
+    } else {
+        printf("2000 bytes allocation failed.\n");
+    }
+    printf("===========================================================\n");
     return 0;
 }
