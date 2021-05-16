@@ -1,0 +1,92 @@
+If a RAM is 32-bit addressable, it has total byte addresses as below.
+
+    0x00000000 -   0xFFFFFFFF
+
+    (0)        -   4294967295 
+
+Means, this RAM has 4294967296 bytes available in total.
+
+In paging whole RAM (whether its 32-bit addressable, or 64-bit addressable),is
+divided into slots of same size.
+
+This slot of same size is called a PAGE. 
+
+Generally (in many OS), this the SIZE of each PAGE is 4096 bytes (4 KB).
+
+So, How many PAGES can be present in a 32-bit addressable RAM?
+
+    Max number of bytes available in a 32-bit addressable RAM : 4294967296 bytes
+    PAGE size                                                 : 4096 bytes
+
+        Total pages = 4294967296 / 4096 = 1048576 pages.
+
+Hence, we have total 1048576 pages in a 32-bit addressable RAM when the size of
+each page is 4096 bytes.
+
+We can represent this RAM as below:
+
+            ----------------------- <--- 0x00000000
+            |                     |
+            |       PAGE 1        |
+            | (size : 4096 bytes  |
+            |                     |
+            ----------------------- <--- 0x00001000
+            |                     |
+            |       PAGE 2        |
+            | (size : 4096 bytes  |
+            |                     |
+            ----------------------- <--- 0x00002000
+            |                     |
+            |       PAGE 3        |
+            | (size : 4096 bytes  |
+            |                     |
+            ----------------------- <--- 0x00003000
+            |                     |
+            |       PAGE 4        |
+            | (size : 4096 bytes  |
+            |                     |
+            ----------------------- <--- 0x00004000
+            |                     |
+            |       PAGE 5        |
+            | (size : 4096 bytes  |
+            |                     |
+            ----------------------- <--- 0x00005000
+            |                     |
+            |       PAGE 6        |
+            | (size : 4096 bytes  |
+            |                     |
+            ----------------------- <--- 0x00006000
+            |                     |
+            |        |            |
+            |        |            |
+            |        |            |
+            |        |            |
+            |        |            |
+            |        |            |
+            |        |            |
+            |        |            |
+            |        |            |
+            |        |            |
+            |        |            |
+            |        |            |
+            |        |            |
+            |       \|/           |
+            |                     |
+            |                     |
+            ----------------------- <---- 0xFFFFEFFF
+            |                     |
+            |     PAGE 1048576    |
+            | (size : 4096 bytes  |
+            |                     |
+            ----------------------- <---- 0xFFFFFFFF
+
+When OS need to load 
+
+
+
+
+
+ 
+
+
+  
