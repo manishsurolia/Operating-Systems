@@ -228,8 +228,8 @@ RAM where the page has actually been loaded.
 Hence, when the program pages loads in RAM's page frames, we need to note down
 the addresses of these page frames.
 
-This noting down of all the real page frame addresses corresponding to each
-page, is called 'page table'.
+This noting down of all the real page frame numbers corresponding to each page,
+is called 'page table'.
 
 A page table looks like below:
 
@@ -257,12 +257,13 @@ A page table looks like below:
     | |flags  |                    |  |
     | -----------------------------   |
     | <------32 bits-------------->   |
+    ----------------------------------
                  |
                  |
                  |
                  |
                 \|/
-  N -----------------------------------
+    ----------------------------------- (1048576)
     | --------|---------------------  |
     | | 12    |  20 bits for any   |  |
     | |bits   |  page frame        |  |
@@ -270,6 +271,7 @@ A page table looks like below:
     | |flags  |                    |  |
     | -----------------------------   |
     | <------32 bits-------------->   |
+    -----------------------------------
 
 
 This table gives the frame number of each page in RAM. Like, which RAM page
@@ -290,13 +292,14 @@ Answer : Yes, we have total of 1048576 frames in a 32-bit addressable RAM when
 each page size is 4096. So, 20 bits are sufficient to write any page frame
 number (PFN) in whole RAM.
 
-So, each page table entry has size of 4 bytes.
+Along with these 20 bits there are 12 extra bits to store permission bits.
+Hence, the total size of a page table entry is 20+12 = 32 bits (4 bytes).
 
 Question : How big can be a page table?
 --------
 
 Answer : If a program needs only 5 pages to be stored in RAM, it needs 5 page
-frames, so 5 page table entries are sufficient. But somhow each process has
+frames, so 5 page table entries are sufficient. But somehow each process has
 placeholder to contain all (2^20 = 1048576) page frame numbers.
 
 Hence, the size of a page table for each process is :
