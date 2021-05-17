@@ -2,57 +2,69 @@ If a RAM is 32-bit addressable, it has total byte addresses as below.
 
     0x00000000 -   0xFFFFFFFF
 
-    (0)        -   4294967295 
+    (0)        -   4294967295
 
-Means, this RAM has 4294967296 bytes available in total.
+Means, this RAM has 4294967296 bytes available, in total.
 
-In paging whole RAM (whether its 32-bit addressable, or 64-bit addressable),is
-divided into slots of same size.
+Note : A memory address always points to a single byte only.
+       A 'word' is just a group of bytes. 2, 4, 8..., depending upon the data
+       bus size of the CPU.
 
-This slot of same size is called a PAGE. 
+Paging divides an executable program into equal-sized pages and physical
+memory(RAM) into the same fixed size frames. So, you are typically fixing equal
+size blocks called 'pages' into equal block shaped spaces called 'page frame'!!!
+Try to visualize this.
 
-Generally (in many OS), this the SIZE of each PAGE is 4096 bytes (4 KB).
+So, in paging, the whole RAM (whether its 32-bit addressable, or
+64-bit addressable), is divided into frames of same size.
 
-So, How many PAGES can be present in a 32-bit addressable RAM?
+This frame of same size is called a 'page frame' where some program page will
+come and sit.
+
+Generally (in many OS), the size of each 'PAGE' and 'PAGE FRAME' is 4096 bytes
+(4 KB).
+
+So, if PAGE size is 4096 bytes, how many PAGES can be present in a 32-bit
+addressable RAM?
 
     Max number of bytes available in a 32-bit addressable RAM : 4294967296 bytes
     PAGE size                                                 : 4096 bytes
 
-        Total pages = 4294967296 / 4096 = 1048576 pages.
+        Total pages = 4294967296 / 4096 = 1048576 page frames.
 
-Hence, we have total 1048576 pages in a 32-bit addressable RAM when the size of
-each page is 4096 bytes.
+Hence, we can have total 1048576 page frames in a 32-bit addressable RAM when
+the size of each page frame is 4096 bytes.
 
 We can represent this RAM as below:
 
             ----------------------- <--- 0x00000000
             |                     |
-            |       PAGE 1        |
+            |    PAGE FRAME 1     |
             | (size : 4096 bytes  |
             |                     |
             ----------------------- <--- 0x00001000
             |                     |
-            |       PAGE 2        |
+            |   PAGE FRAME 2      |
             | (size : 4096 bytes  |
             |                     |
             ----------------------- <--- 0x00002000
             |                     |
-            |       PAGE 3        |
+            |   PAGE FRAME 3      |
             | (size : 4096 bytes  |
             |                     |
             ----------------------- <--- 0x00003000
             |                     |
-            |       PAGE 4        |
+            |   PAGE FRAME 4      |
             | (size : 4096 bytes  |
             |                     |
             ----------------------- <--- 0x00004000
             |                     |
-            |       PAGE 5        |
+            |   PAGE FRAME 5      |
             | (size : 4096 bytes  |
             |                     |
             ----------------------- <--- 0x00005000
             |                     |
-            |       PAGE 6        |
+            |   PAGE FRAME 6      |
             | (size : 4096 bytes  |
             |                     |
             ----------------------- <--- 0x00006000
@@ -75,18 +87,234 @@ We can represent this RAM as below:
             |                     |
             ----------------------- <---- 0xFFFFEFFF
             |                     |
-            |     PAGE 1048576    |
+            | PAGE FRAME 1048576  |
             | (size : 4096 bytes  |
             |                     |
             ----------------------- <---- 0xFFFFFFFF
 
-When OS need to load 
+             32-bit addressable RAM
+             ----------------------
+
+When OS need to load a program into RAM, it first divides this whole program
+into fixed size(4096 bytes) pages, and try to find whether RAM has sufficient
+page frames available or not. Let's assume that kernel also maintain a free-list
+similar to 'malloc' to get free page frames from RAM.
+
+Let's take an example to understand this.
+Suppose we have an executable(with all data, text..etc), which needs total of
+17000 bytes in RAM, which includes all its things, like data, text, stack,
+heap..etc.
+
+So, this program will take total of 5 page frames of RAM to be loaded
+completely.
+
+4096 * 5 = 20480 bytes
+
+Note: Four page frames from RAM will not be sufficient as that will have only
+16384 bytes space.
+
+Compiler/linker has written all the instructions in this program assuming that
+this program starts at address 0. So, first scheduler will make a virtual
+address space of this program as per the program.
+
+         ____________________ <-- 0x00000000
+         |                  |        /|\
+         |                  |         |
+         |                  |         |
+         |                  |         |
+         |                  |         |
+         |                  |         |
+         |                  |         |
+         |                  |         | 17000 bytes
+         |                  |         |
+         |                  |         |
+         |                  |         |
+         |                  |         |
+         |                  |         |
+         |                  |         |
+         |                  |         |
+         |                  |         |
+         |                  |         |
+         |                  |        \|/
+         -------------------- <-- 0x00004268
+
+This whole program is converted to pages as below:
+
+
+         ____________________ <-- 0x00000000
+         |                  |        /|\
+         |     PAGE 1       |         |
+         |                  |         |
+         --------------------         |
+         |                  |         |
+         |     PAGE 2       |         |
+         |                  |         | 17000 bytes
+         --------------------         |
+         |                  |         |
+         |     PAGE 3       |         |
+         |                  |         |
+         --------------------         |
+         |                  |         |
+         |     PAGE 4       |         |
+         |                  |         |
+         --------------------        \|/
+         |                  | <-- 0x00004268
+         |     PAGE 5       |
+         |                  |
+         -------------------- <-- 0x00005000
+
+Now, scheduler finds page frames in RAM and fits all the above pages in the
+found page frames in RAM as below:
+
+
+          __________________   <--- 0x00000000
+         |                  |
+         | Operating system |
+         |                  |
+         --------------------
+         |                  |
+         |     (Unused)     |
+         |                  |
+         --------------------
+         |                  |
+         |     PAGE 3       |
+         |                  |
+         --------------------
+         |                  |
+         |     PAGE 4       |
+         |                  |
+         --------------------
+         |                  |
+         |     (Unused)     |
+         |                  |
+         --------------------
+         |                  |
+         |     PAGE 2       |
+         |                  |
+         --------------------
+         |                  |
+         |     Unused       |
+         |                  |
+         --------------------
+         |                  |
+         |     PAGE 5       |
+         |                  |
+         --------------------
+         |                  |
+         |     PAGE 1       |
+         |                  |
+         --------------------
+         |                  |
+         |        |         |
+         |        |         |
+         |        |         |
+         |       \|/        |
+         ------------------- <-- 0xFFFFFFFF
+
+
+We need to maintain a kind of database(array) to find appropriate physical
+frame address for a virtual address for this reason.
+
+ - All the code written in this program read/write/execute data in  memory
+based on the original addresses given to them by linker, and not based on the
+place where this program will be loaded.
+So, runtime conversion of the address from virtual memory to physical memory is
+required.
+
+Means, when a programs executes an instruction which uses some program address,
+the CPU should be able to convert this address to the real address in the
+RAM where the page has actually been loaded.
+
+Hence, when the program pages loads in RAM's page frames, we need to note down
+the addresses of these page frames.
+
+This noting down of all the real page frame addresses corresponding to each
+page, is called 'page table'.
+
+A page table looks like below:
+
+  1 -----------------------------------
+    | --------|---------------------  |
+    | | 12    |  20 bits for any   |  |
+    | |bits   |  page frame        |  |
+    | | for   |  number in RAM     |  |
+    | |flags  |                    |  |
+    | -----------------------------   |
+    | <------32 bits-------------->   |
+  2 -----------------------------------
+    | --------|---------------------  |
+    | | 12    |  20 bits for any   |  |
+    | |bits   |  page frame        |  |
+    | | for   |  number in RAM     |  |
+    | |flags  |                    |  |
+    | -----------------------------   |
+    | <------32 bits-------------->   |
+  3 -----------------------------------
+    | --------|---------------------  |
+    | | 12    |  20 bits for any   |  |
+    | |bits   |  page frame        |  |
+    | | for   |  number in RAM     |  |
+    | |flags  |                    |  |
+    | -----------------------------   |
+    | <------32 bits-------------->   |
+                 |
+                 |
+                 |
+                 |
+                \|/
+  N -----------------------------------
+    | --------|---------------------  |
+    | | 12    |  20 bits for any   |  |
+    | |bits   |  page frame        |  |
+    | | for   |  number in RAM     |  |
+    | |flags  |                    |  |
+    | -----------------------------   |
+    | <------32 bits-------------->   |
+
+
+This table gives the frame number of each page in RAM. Like, which RAM page
+frame has the first page of this process, which page frame has the second page
+of the process...etc. Once we find the frame number, we can easily calculate
+the actual address of the frame, when a program executes and tries to
+read/write/execute data on a memory.
+
+Note here that a separate page table is required for each process to find where
+this process pages are present in RAM.
+
+Also, note that each entry in this page table is called 'page table entry'.
+
+Question : Are 20 bits enough to write any page frame number in a 32-bit
+---------  addressable RAM?
+
+Answer : Yes, we have total of 1048576 frames in a 32-bit addressable RAM when
+each page size is 4096. So, 20 bits are sufficient to write any page frame
+number (PFN) in whole RAM.
+
+So, each page table entry has size of 4 bytes.
+
+Question : How big can be a page table?
+--------
+
+Answer : If a program needs only 5 pages to be stored in RAM, it needs 5 page
+frames, so 5 page table entries are sufficient. But somhow each process has
+placeholder to contain all (2^20 = 1048576) page frame numbers.
+
+Hence, the size of a page table for each process is :
+ = 2^20 entires  * 4 bytes
+ = 1048576 * 4 = 4194304 (4 MB)
+
+Size of a page table for each process is 4 MB.
+
+
+Reference :
+
+(1) https://pages.cs.wisc.edu/~remzi/OSTEP/vm-paging.pdf
+
+(2) https://stackoverflow.com/questions/2724449/difference-between-word-addressable-and-byte-addressable#:~:text=In%20reality%2C%20memory%20is%20only,bus%20size%20of%20the%20CPU.
+
+(3) https://stackoverflow.com/questions/32744662/how-is-there-internal-fragmentation-in-paging-and-no-external-fragmentation#:~:text=Answer%20is%20no.,possible%20but%20not%20external%20fragmentation.
 
 
 
 
 
- 
-
-
-  
