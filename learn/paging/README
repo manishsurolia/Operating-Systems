@@ -308,6 +308,159 @@ Hence, the size of a page table for each process is :
 
 Size of a page table for each process is 4 MB.
 
+==============================================
+Let's see a real example on a 64-bit machine:
+==============================================
+
+- My computer has 64-bit addressable RAM.
+[ ] uname -mpi
+x86_64 x86_64 x86_64
+
+- The whole RAM is divided into page frames of 4096 bytes.
+[ ] getconf PAGE_SIZE
+4096
+
+- 'gcc' compiler tool chain in my computer, compiles C code for this 64-bit
+addressable RAM.
+
+- Total byte addresses I have in my 64-bit addressable RAM is :
+    0     -       18446744073709551616
+    0x0   -       0xFFFFFFFFFFFFFFFF
+
+- So, the total number of page frames are equal to:
+
+        18446744073709551616 / 4096 = 4503599627370495
+
+        2^64                 / 2^12 = 2^52
+
+- This reflects that first 52 bits of any address created by the compiler tool
+chain (logical address), will be used to find the find the virtual page number.
+
+- I have this C code to add two numbers.
+
+C code:
+-------
+
+[ ] vim test.c
+
+#include <stdio.h>
+
+
+int add(int a, int b)
+{
+    return (a + b);
+}
+
+int main(int argc, char **argv)
+{
+    int x = 10;
+    int y = 20;
+    int z;
+
+    z = add(x,y);
+    printf("Result : %d\n",z);
+    return 0;
+}
+
+Compile:
+--------
+
+[ ] gcc test.c
+
+Snippet of Assembly ():
+-----------------------
+
+[ ] objdump -d a.out
+
+0000000000001149 <add>:
+    1149:	f3 0f 1e fa          	endbr64
+    114d:	55                   	push   %rbp
+    114e:	48 89 e5             	mov    %rsp,%rbp
+    1151:	89 7d fc             	mov    %edi,-0x4(%rbp)
+    1154:	89 75 f8             	mov    %esi,-0x8(%rbp)
+    1157:	8b 55 fc             	mov    -0x4(%rbp),%edx
+    115a:	8b 45 f8             	mov    -0x8(%rbp),%eax
+    115d:	01 d0                	add    %edx,%eax
+    115f:	5d                   	pop    %rbp
+    1160:	c3                   	retq
+
+0000000000001161 <main>:
+    1161:	f3 0f 1e fa          	endbr64
+    1165:	55                   	push   %rbp
+    1166:	48 89 e5             	mov    %rsp,%rbp
+    1169:	48 83 ec 20          	sub    $0x20,%rsp
+    116d:	89 7d ec             	mov    %edi,-0x14(%rbp)
+    1170:	48 89 75 e0          	mov    %rsi,-0x20(%rbp)
+    1174:	c7 45 f4 0a 00 00 00 	movl   $0xa,-0xc(%rbp)
+    117b:	c7 45 f8 14 00 00 00 	movl   $0x14,-0x8(%rbp)
+    1182:	8b 55 f8             	mov    -0x8(%rbp),%edx
+    1185:	8b 45 f4             	mov    -0xc(%rbp),%eax
+    1188:	89 d6                	mov    %edx,%esi
+    118a:	89 c7                	mov    %eax,%edi
+    118c:	e8 b8 ff ff ff       	callq  1149 <add>        <--- Jumping to 0x0000000000001149 (add function).
+    1191:	89 45 fc             	mov    %eax,-0x4(%rbp)
+    1194:	8b 45 fc             	mov    -0x4(%rbp),%eax
+    1197:	89 c6                	mov    %eax,%esi
+    1199:	48 8d 3d 64 0e 00 00 	lea    0xe64(%rip),%rdi
+    11a0:	b8 00 00 00 00       	mov    $0x0,%eax
+    11a5:	e8 a6 fe ff ff       	callq  1050 <printf@plt>
+    11aa:	b8 00 00 00 00       	mov    $0x0,%eax
+    11af:	c9                   	leaveq
+    11b0:	c3                   	retq
+    11b1:	66 2e 0f 1f 84 00 00 	nopw   %cs:0x0(%rax,%rax,1)
+    11b8:	00 00 00
+    11bb:	0f 1f 44 00 00       	nopl   0x0(%rax,%rax,1)
+
+- This whole conversion of logical address to physical RAM address happens in
+MMU.
+
+- When processor sees a memory address to be accessed while executing
+instructions, it asks MMU to convert this logical address to physical address
+using this page table. When a program executes, MMU has its page table address
+with it. All processes page tables are maintained in RAM itself.
+
+Example : "callq  1149 <add>" (from above code).
+
+- Here, lets decode, where the function 'add' is stored in RAM.
+
+- Logical address for this function is 0x0000000000001149.
+
+Below is the binary structure for this.
+
+    00000000 00000000 00000000 00000000 00000000 00000000 0001 0001 0100 1001
+
+First 52 bits will be used to find the virtual page number (as mentioned above).
+
+    00000000 00000000 00000000 00000000 00000000 00000000 0001 0001 0100 1001
+    <-------------------------------------------------------->
+
+So, this address is in virtual page number 1.
+and offset is (remaining) : 0001 0100 1001
+
+Now, look for this process page table, what is the physical page frame number
+for this virtual page number 1. The second entry in this below page table will
+give us the physical page frame number. We just need to replace it in the above
+address at first 52 bits.
+
+That's all, we get the correct physical address for this logical address.
+Now, processor can use this address to do its operation related to the
+instruction.
+
+
+      0 ------------------------------------
+        | 52 bit physical page frame number|
+      1 ------------------------------------
+        | 52 bit physical page frame number|
+      2 ------------------------------------
+        | 52 bit physical page frame number|
+      3 -----------------------------------
+        |                                  |
+        |                                  |
+       \/                                 \/
+
+
+This page table is filled with the physical page numbers, when a program is
+loaded in memory (program scheduling time).
 
 Reference :
 
