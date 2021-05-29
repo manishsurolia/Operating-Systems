@@ -30,7 +30,7 @@ addressable RAM?
     Max number of bytes available in a 32-bit addressable RAM : 4294967296 bytes
     PAGE size                                                 : 4096 bytes
 
-        Total pages = 4294967296 / 4096 = 1048576 page frames.
+        Total page frames = 4294967296 / 4096 = 1048576
 
 Hence, we can have total 1048576 page frames in a 32-bit addressable RAM when
 the size of each page frame is 4096 bytes.
@@ -212,16 +212,15 @@ found page frames in RAM as below:
          ------------------- <-- 0xFFFFFFFF
 
 
-We need to maintain a kind of database(array) to find appropriate physical
-frame address for a virtual address for this reason.
+Kernel need to maintain a kind of free-list to find appropriate physical frame
+for a virtual page for this reason.
 
- - All the code written in this program read/write/execute data in  memory
-based on the original addresses given to them by linker, and not based on the
-place where this program will be loaded.
-So, runtime conversion of the address from virtual memory to physical memory is
-required.
+All the data written in this program's read/write/execute memory is based on the
+original addresses given to them by linker, and not based on the place where
+this program will be loaded in RAM. Hence, Runtime conversion of an address from
+virtual memory to physical memory is required.
 
-Means, when a programs executes an instruction which uses some program address,
+Means, when a program executes an instruction which uses some program address,
 the CPU should be able to convert this address to the real address in the
 RAM where the page has actually been loaded.
 
@@ -235,26 +234,29 @@ A page table looks like below:
 
   1 -----------------------------------
     | --------|---------------------  |
-    | | 12    |  20 bits for any   |  |
-    | |bits   |  page frame        |  |
-    | | for   |  number in RAM     |  |
-    | |flags  |                    |  |
+    | | 12    |  20 bits for a page|  |
+    | |bits   |  frame number in   |  |
+    | | for   |  RAM, where the    |  |
+    | |flags  |  program's first   |  |
+    | |       |  page is loaded    |  |
     | -----------------------------   |
     | <------32 bits-------------->   |
   2 -----------------------------------
     | --------|---------------------  |
-    | | 12    |  20 bits for any   |  |
-    | |bits   |  page frame        |  |
-    | | for   |  number in RAM     |  |
-    | |flags  |                    |  |
+    | | 12    |  20 bits for a page|  |
+    | |bits   |  frame number in   |  |
+    | | for   |  RAM, where the    |  |
+    | |flags  |  program's second  |  |
+    | |       |  page is loaded    |  |
     | -----------------------------   |
     | <------32 bits-------------->   |
   3 -----------------------------------
     | --------|---------------------  |
-    | | 12    |  20 bits for any   |  |
-    | |bits   |  page frame        |  |
-    | | for   |  number in RAM     |  |
-    | |flags  |                    |  |
+    | | 12    |  20 bits for a page|  |
+    | |bits   |  frame number in   |  |
+    | | for   |  RAM, where the    |  |
+    | |flags  |  program's third   |  |
+    | |       |  page is loaded    |  |
     | -----------------------------   |
     | <------32 bits-------------->   |
     ----------------------------------
@@ -265,10 +267,11 @@ A page table looks like below:
                 \|/
     ----------------------------------- (1048576)
     | --------|---------------------  |
-    | | 12    |  20 bits for any   |  |
-    | |bits   |  page frame        |  |
-    | | for   |  number in RAM     |  |
-    | |flags  |                    |  |
+    | | 12    |  20 bits for a page|  |
+    | |bits   |  frame number in   |  |
+    | | for   |  RAM, where the    |  |
+    | |flags  |  program's Nth     |  |
+    | |       |  page is loaded    |  |
     | -----------------------------   |
     | <------32 bits-------------->   |
     -----------------------------------
