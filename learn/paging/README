@@ -465,6 +465,94 @@ instruction.
 This page table is filled with the physical page numbers, when a program is
 loaded in memory (program scheduling time).
 
+================================
+Do page tables make system slow?
+================================
+
+Yes, because for each memory access, processor needs to fetch the data from one
+of its Page table entry(which exists in RAM) to get the physical page frame
+number.
+
+Simply putting the whole thing as below,
+
+We are just replacing the virtual page number of a virtual address with the
+physical frame number using the page table of the process.
+
+    For example, from our last example, 0x0000000000001149 is represented as,
+
+    00000000 00000000 00000000 00000000 00000000 00000000 0001 0001 0100 1001
+    <-------------------------------------------------------->
+
+Replace these first 52 bits(virtual page number) with the physical frame number.
+
+Let's assume that a single 'page-table base register' contains the physical
+address of the starting location of the page table.
+
+Now, to find the location of the desired page table entry, the hardware(MMU)
+needs to do below:
+
+    VPN = (VirtualAddress & VPN_MASK) >> SHIFT;
+    PTEAddr = PageTableBaseRegister + (VPN * sizeof(PTE));
+
+Here, VPN_MASK represents the mask for the number of bits used for finding page
+number. The purpose of this VPN is that, we just want to fetch the page number
+used in the address. so that we can look in the page table to find the
+corresponding physical frame number.
+
+For example, in a 64-bit machine(as last example), we have the number of bits
+used for page number is 'first 52 bits'.
+
+so the VPN_MASK here is,
+
+    #define VPN_MASK 0xFFFFFFFFFFFFF000
+
+and we just need to shift with 3 bits to get the page number. Hence,
+
+    #define SHIFT 3
+
+Now, lets apply the first statement on the last example to get the virtual page
+number.
+
+    VPN = (0x0000000000001149 & VPN_MASK) >> SHIFT
+        = 1
+
+So, the virtual page number is 1 for this address. we need to look for the
+physical frame number for this first virtual page in the page table.
+
+Now, lets see which RAM address has the physical frame number for this VPN.
+
+    PTEAddr = PageTableBaseRegister + (VPN * sizeof(PTE));
+
+This 'PTEAddr' of RAM holds the physical frame number for this VPN. Just get the
+value from this address. This will be our physical frame number.
+
+Note : Below fetching the phycial page frame number from this 'PTEAddr' is the
+costliest operation among all other things we are doing here because processor
+need to fetch data from external entity (RAM).
+
+    PFN = *PTEAddr
+
+Means, for each virtual address resolution, we need to do an extra fetch from
+RAM, which makes the system SLOW.
+
+Now, once you get the physcial page number, its quite easy to the physical
+address using this. Below is the formula.
+
+    offset = VirtualAddress & OFFSET_MASK;
+    PhysicalAddr = (PFN << SHIFT) | offset;
+
+
+Here, obviously, OFFSET_MASK is the remaining bits.
+
+In our example, its 64 - 52 = 12 bits.
+
+Hence,
+
+#define OFFSET_MASK 0xFFF
+
+So, get the offset, left shift PFN with 3 bits, and just do OR with the offset
+and you will get the physical address.
+
 Reference :
 
 (1) https://pages.cs.wisc.edu/~remzi/OSTEP/vm-paging.pdf
