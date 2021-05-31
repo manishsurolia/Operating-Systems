@@ -553,7 +553,27 @@ Hence,
 So, get the offset, left shift PFN with 3 bits, and just do OR with the offset
 and you will get the physical address.
 
-Reference :
+Summary:
+-------
+
+Paging is a solution to the challenge of virtualizing memory. It has many
+advantages over previous approaches (such as segmentation).
+
+    - First, it does not lead to external fragmentation, as paging (by design)
+divides memory into fixed-sized units.
+    - Second, it is quite flexible, enabling the sparse use of virtual address
+spaces.
+
+However, the above method of paging will lead to a slower machine (with an
+extra memory access to access each virtual address) as well as memory waste
+(with memory filled with page tables instead of useful application data).
+
+To address the above challenge, we have Translation Lookaside Buffer (TLB).
+It is a hardware support, which helps us to make the paging faster.
+Please check TLB section to know more about TLB and its work.
+
+References:
+----------
 
 (1) https://pages.cs.wisc.edu/~remzi/OSTEP/vm-paging.pdf
 
