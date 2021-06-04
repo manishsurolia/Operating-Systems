@@ -469,8 +469,8 @@ loaded in memory (program scheduling time).
 Do page tables make system slow?
 ================================
 
-Yes, because for each memory access, processor needs to fetch the data from one
-of its Page table entry(which exists in RAM) to get the physical page frame
+Yes, because for each memory access, processor needs to fetch the data from the
+process's page table entry(which exists in RAM) to get the physical page frame
 number.
 
 Simply putting the whole thing as below,
@@ -486,7 +486,8 @@ physical frame number using the page table of the process.
 Replace these first 52 bits(virtual page number) with the physical frame number.
 
 Let's assume that a single 'page-table base register' contains the physical
-address of the starting location of the page table.
+address of the starting location of the process's page table, for which,
+processor is trying to translate the virtual address into physical address.
 
 Now, to find the location of the desired page table entry, the hardware(MMU)
 needs to do below:
