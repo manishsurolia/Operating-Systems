@@ -73,4 +73,6 @@ Benefit of TLB:
 
 TLB is a hardware cache, which sits very near to the proessor and designed to
 be very fast. Hence, if the virtual page to physical frame number is present in
-TLB, it makes the address traslation very fast at run time.
+TLB, it makes the address traslation very fast at run time because in this case
+processor does not have to do an extra access to the RAM address in page table
+to get the the physical frame number.
