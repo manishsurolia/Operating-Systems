@@ -1,0 +1,76 @@
+Paging makes a system slow because for each virtual memory translation, CPU need
+to fetch the corresponding 'Physical frame number' stored in the process's page
+table entry, which is stored in the RAM. For complete background of paging,
+please see the last section about paging.
+
+Translation Lookaside buffer (TLB):
+--------------------------------
+
+TLB is a part of Memory Management unit(MMU) hardware which works along with
+paging to overcome the speed issue of paging. It is simply a hardware cache to
+do faster virtual to physical address translations.
+
+We can also call it 'address-translation cache'.
+
+Upon each virtual memory reference, the hardware first checks the TLB to see if
+then desired translation is present there or not. If present, the translation is
+performed(quickly) without having to consult the page table. If not present,
+virtual address is translated with the use of page table.
+
+Below is an algorithm, which can represent the logic for TLB.
+(Reference : https://pages.cs.wisc.edu/~remzi/OSTEP/vm-tlbs.pdf)
+
+ VPN = (VirtualAddress & VPN_MASK) >> SHIFT
+ (Success, TlbEntry) = TLB_Lookup(VPN)
+ if (Success == True) // TLB Hit
+    if (CanAccess(TlbEntry.ProtectBits) == True)
+        Offset = VirtualAddress & OFFSET_MASK
+        PhysAddr = (TlbEntry.PFN << SHIFT) | Offset
+        Register = AccessMemory(PhysAddr)
+    else
+        RaiseException(PROTECTION_FAULT)
+ else // TLB Miss
+    PTEAddr = PTBR + (VPN * sizeof(PTE))
+    PTE = AccessMemory(PTEAddr)
+    if (PTE.Valid == False)
+        RaiseException(SEGMENTATION_FAULT)
+    else if (CanAccess(PTE.ProtectBits) == False)
+        RaiseException(PROTECTION_FAULT)
+    else
+        TLB_Insert(VPN, PTE.PFN, PTE.ProtectBits)
+         RetryInstruction()
+
+It is quite simple as below:
+    1. Extract the virtual page number (VPN) from the virtual address.
+    2. Check whether TLB holds translation for this VPN not.
+    3. If translation is present for this VPN (TLB hit), fetch the
+       'physical frame number' and construct corresponding physical address.
+    4. If the CPU does not find the translation in the TLB (TLB miss), access
+       process page table to find the traslation and update the TLB with this
+       traslation information. This operation of checking page table is costly
+       as there is an extra RAM memory access to find the
+       'Physical Frame Number'. Discussed in paging section earlier.
+    5. Once the TLB is updated, the hardware retries the instruction. This time,
+       the translation is found in the TLB.  
+
+TLB Hit :
+--------
+
+When processor is able to find the traslation from virtual page number to a
+physical frame number in TLB, It is called TLB hit.
+
+
+TLB Miss :
+--------
+
+When processor does not find the physical frame number for a virtual page in
+TLB, its a TLB miss.
+After a TLB miss, it has to look into the process page table to find the
+physical frame number. 
+
+Benefit of TLB:
+--------------
+
+TLB is a hardware cache, which sits very near to the proessor and designed to
+be very fast. Hence, if the virtual page to physical frame number is present in
+TLB, it makes the address traslation very fast at run time.
