@@ -196,3 +196,21 @@ the same physical frame number in RAM.
 
 It is very useful where libraries are shared between multiple processes. This
 saves a lot of memory in RAM by re-utilizing the code.
+
+Replacement Policy:
+------------------
+
+If the size of TLB is 32, means there can be only 32 translations exist at a
+time between VPN's to PFN's. Hardware should not have problem in storing 32
+entries, but when it need to store 33rd entry it need to find which of the
+already existing entry to replace.
+
+One such policy can be LRU, in which an entry which has been used least, can be
+replaced.
+
+Issue:
+------
+
+If the number of pages a program accesses in a short period of time, exceeds
+the number of pages that fit into the TLB, the program will generate a large
+number of TLB misses and will run slower.
