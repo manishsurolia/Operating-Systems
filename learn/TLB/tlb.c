@@ -1,11 +1,13 @@
 /*
- * The purpose of this program is to see the effect of TLB in an Linux.
+ * Purpose of this program is to see the effect of TLB in Linux OS.
  *
  * If the TLB can hold 32 VPN->PFN translations, then till 32 pages repeatedly
  * access(10000000 times), 'Average access time per page' is less and as soon as
- * you increase the 'NUMPAGES' to 33, the 'access time per page' will increase
+ * we increase the 'NUMPAGES' to 33, the 'access time per page' will increase
  * because the translation will not be found in the TLB, and OS need to go to
  * process page table entry to get the related physical page number.
+ *
+ * You can just increase the value of 'NUMPAGES' slowly and
  *
  * Note : The only value to change here is 'NUMPAGES', to see how 'average
  * access time per page' varies with more number of pages because TLB has a
@@ -19,7 +21,7 @@
  * of 'NUMPAGES', which gives an impression that in a linux VM, VPN->PFN
  * translations are always done with the use of paging and there is no
  * involvement of any TLB here.
- */ 
+ */
 
 #include <stdio.h>
 #include <sys/time.h>
@@ -45,7 +47,7 @@ int main(int argc, char **argv)
     /*
      * We want to update each page in the array REPEAT_FACTOR times.
      */
-    for (unsigned int i = 0; i < REPEAT_FACTOR; i++) { 
+    for (unsigned int i = 0; i < REPEAT_FACTOR; i++) {
         clock_gettime(CLOCK_MONOTONIC, &tstart);
         /*
          * Access each page used by this array, and just update the first few
