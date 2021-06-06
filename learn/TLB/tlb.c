@@ -7,7 +7,9 @@
  * because the translation will not be found in the TLB, and OS need to go to
  * process page table entry to get the related physical page number.
  *
- * You can just increase the value of 'NUMPAGES' slowly and
+ * You can just increase the value of 'NUMPAGES' one by one and find where you
+ * see sharp rise in 'Average access time per page', this will reflect the size
+ * of TLB.
  *
  * Note : The only value to change here is 'NUMPAGES', to see how 'average
  * access time per page' varies with more number of pages because TLB has a
