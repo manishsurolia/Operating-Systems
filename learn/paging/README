@@ -305,6 +305,11 @@ Answer : If a program needs only 5 pages to be stored in RAM, it needs 5 page
 frames, so 5 page table entries are sufficient. But somehow each process has
 placeholder to contain all (2^20 = 1048576) page frame numbers.
 
+A possible reason for having placeholder for all possible page frames is that, a
+process anytime, can allocate more memory dynamically, and also, with more
+shared library calls from the process, it needs placeholder to keep the virtual
+page number to physical frame number association.
+
 Hence, the size of a page table for each process is :
  = 2^20 entires  * 4 bytes
  = 1048576 * 4 = 4194304 (4 MB)
