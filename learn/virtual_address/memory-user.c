@@ -9,14 +9,16 @@
 /*
  * This program just gets the base address of the same process which is being
  * executed.
- * It just reads the file '/proc/<pid>/maps'
+ * It just reads the file '/proc/<pid>/maps' and find the start address of the
+ * very first segment(usually code segment, because code size does not change
+ * during program exeution.
  */
-unsigned long long get_base_addr(void)
+unsigned long long get_process_start_addr(void)
 {
     FILE* fp;
     char fname[MAX_LINE_LEN];
     char buffer[MAX_LINE_LEN];
-    unsigned long long base_addr = 0;
+    unsigned long long process_start_addr = 0;
 
     sprintf(fname, "/proc/%ld/maps", (long)getpid());
     fp = fopen(fname, "r");
@@ -26,18 +28,19 @@ unsigned long long get_base_addr(void)
     }
     // Reads first line to get starting address of the process.
     fgets(buffer, MAX_LINE_LEN - 1, fp);
-    base_addr = strtoll(strtok(buffer, "-"), NULL, 16);
+    process_start_addr = strtoll(strtok(buffer, "-"), NULL, 16);
 
     fclose(fp);
-    return base_addr;
+    return process_start_addr;
 }
 
 int main(int argc, char **argv)
 {
-    unsigned long long base_addr = get_base_addr();
+    unsigned long long process_start_addr = get_process_start_addr();
     printf("Address of main function : %p\n",main);
-    printf("(Process Base Address + offset) : 0x%llx+0x%llx\n", base_addr,
-           ((unsigned long long)main - base_addr));
+    printf("(Process Start Address + offset) : 0x%llx+0x%llx\n",
+            process_start_addr,
+            ((unsigned long long)main - process_start_addr));
     while(1);
     return 0;
 }
