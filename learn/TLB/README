@@ -158,7 +158,7 @@ A TLB looks something like below for a process:
 
 Note : With each context switch, TLB entries are flushed out. Hence, If OS does
 context switching (switching between processes) more frequently, there will be
-more TLB miss at the each resume of processes, as TLB has no entries in it.
+more TLB miss at each resume of processes, as TLB has no entries in it.
 
 To reduce this overhead, some systems add support to enable sharing of the TLB
 across context switches. In particular, some hardware provide and 'address space
