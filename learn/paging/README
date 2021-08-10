@@ -40,32 +40,32 @@ We can represent this RAM as below:
             ----------------------- <--- 0x00000000
             |                     |
             |    PAGE FRAME 1     |
-            | (size : 4096 bytes  |
+            | (size : 4096 bytes) |
             |                     |
             ----------------------- <--- 0x00001000
             |                     |
             |   PAGE FRAME 2      |
-            | (size : 4096 bytes  |
+            | (size : 4096 bytes) |
             |                     |
             ----------------------- <--- 0x00002000
             |                     |
             |   PAGE FRAME 3      |
-            | (size : 4096 bytes  |
+            | (size : 4096 bytes) |
             |                     |
             ----------------------- <--- 0x00003000
             |                     |
             |   PAGE FRAME 4      |
-            | (size : 4096 bytes  |
+            | (size : 4096 bytes) |
             |                     |
             ----------------------- <--- 0x00004000
             |                     |
             |   PAGE FRAME 5      |
-            | (size : 4096 bytes  |
+            | (size : 4096 bytes) |
             |                     |
             ----------------------- <--- 0x00005000
             |                     |
             |   PAGE FRAME 6      |
-            | (size : 4096 bytes  |
+            | (size : 4096 bytes) |
             |                     |
             ----------------------- <--- 0x00006000
             |                     |
@@ -88,7 +88,7 @@ We can represent this RAM as below:
             ----------------------- <---- 0xFFFFEFFF
             |                     |
             | PAGE FRAME 1048576  |
-            | (size : 4096 bytes  |
+            | (size : 4096 bytes) |
             |                     |
             ----------------------- <---- 0xFFFFFFFF
 
