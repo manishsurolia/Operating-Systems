@@ -22,10 +22,16 @@
  * same directory here.
  *
  * Note : This program was written and tested in Ubuntu linux VM in 'virtual
- * box', and it shows almost same 'average access time per page' for any number
- * of 'NUMPAGES', which gives an impression that in a linux VM, VPN->PFN
- * translations are always done with the use of paging and there is no
- * involvement of any TLB here.
+ * box', and below were the 'average access time per page' with different number
+ * of pages accessed.
+ *
+ * With 'NUMPAGES = 32',   'average access time per page' is : 9 nano seconds.
+ * With 'NUMPAGES = 1024', 'average access time per page' is : 11 nano seconds.
+ * With 'NUMPAGES = 2048', 'average access time per page' is : 17 nano seconds.
+ *
+ * This shows that the TLB in this VM supports VPN->PFN traslations between
+ * 1024 to 2048. More entries than that, cause increase in the access time,
+ * because OS need to check the page table.
  */
 
 
