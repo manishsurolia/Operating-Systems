@@ -4,21 +4,21 @@ Fragment : A small part broken off or separated from something.
 Fragmentation : The process or state of breaking or being broken into fragments.
 
 In Operating systems, we have the concept of virtual memory, where compiler
-write a program assuming that it is going to be written at address 0x0 and OS
-has flexibility to put this process at any place in the main memory.
+tool chain writes a program assuming that it is going to be written at address
+0x0 and OS has flexibility to put this program at any place in the main memory.
 
-There are majorly below two ways by which OS achieve this.
-(1) segmentation - It cause external fragmentation.
-(2) Paging - It cause internal fragmentation.
+There are majorly below two ways by which Operating Systems achieve this.
+(1) Segmentation - It causes external fragmentation.
+(2) Paging - It causes internal fragmentation.
 
 Lets see both of them one by one to understand how each way of 'achieving
 virtual memory' cause fragmentations. 
 
 ===============================================================================
 
-Segmentation : Each program is divided in contiguous sections(called segments),
-------------   like code segment, data segment, stack and heap segment etc., and
-               loaded at different places in the RAM.
+Segmentation : Each program is divided in sections(called segments) of
+------------   contiguous memory, like code segment, data segment, stack and
+               heap segment etc., and loaded at different places in the RAM.
 
 We can think of this as how 'malloc' allocates memory in heap region of each
 process. There is a free list maintained by the OS to keep record of each free
@@ -26,7 +26,7 @@ space in the memory and when malloc is done to get contiguous memory for any
 segment, OS goes through the free list and try to find suitable contiguous
 memory to load the segment.
 
-Let's see an example,
+Let's take an example,
 
 Suppose a program(P1) is already loaded in the memory as below (in our small
 RAM of 64KB) :
@@ -73,35 +73,36 @@ RAM of 64KB) :
  64 KB  --------------------------------
 
 
-Here, suppose at this point, another process (P2) want to gets loaded in RAM,
+Here, suppose at this point, another process (P2) wants to get loaded in RAM,
 which has a code segment of 10KB. Even though we have total 24KB of free space
-in the RAM, but all this 24 KB is fragmented. We can not load the process P2's
-code in the memory in current situation. If this 24 KB was all together we
-could have used it for process P2.
+in the RAM, but all this 24 KB is fragmented as 4 fragments of size 8KB each. We
+can not load the process P2 in the memory in current situation. If this 24 KB
+was all together we could have used it for process P2.
 
 For segmentation technique, all the free spaces in RAM are maintained in a free
-list by OS (same as 'malloc' used for heap) and to make all this memory
-together, OS will need to 'coalesce' the free memory like what 'free' call does
-in case of heap.
+list by OS (same as 'malloc' used for heap memory in a process) and to make all
+this memory together, OS will need to 'coalesce' the free memory like what
+'free' call does in case of heap memory inside a process.
 
 But this 'coalescing' is a costly operation, as we need to reshuffle the
 positions of many processes segments which will consume lots of CPU time. This
 problem of fragmentation is called "External fragmentation". It happens with
 segmentation technique of process allocation in RAM.
 
-External Fragmentation : This problem of having small chunk of memories at
+External Fragmentation : This problem of having small chunks of memories at
 ----------------------   different places in RAM, is called
                          "External fragmentation". This type of fragmentation
-                         is caused by 'segmentation'.
+                         is caused by 'segmentation' technique of OS to
+                         virtualize memory.
  
 ===============================================================================
 
 Paging : Paging divides the whole program in same size of virtual pages and load
-------   them in the RAM's available page frames. For complete information on
-         paging, please refer the 'paging' section.
+------   them in the RAM's available page frames of the same size. For complete
+         information on paging, please refer the 'paging' section.
 
-We have an issue with paging, that OS need to maintain a page table for each
-process, and that that page table should have space to contain maximum of page
+We have an issue with paging, that OS needs to maintain a page table for each
+process, and that page table should have space to contain maximum of page
 frames, which can be available in the RAM.
 
 For example,
@@ -120,14 +121,14 @@ So, the total page frames available is : 4294967296/4096   =  1048576
 
 Hence, we can represent any page frame of RAM with 20-bits and assume that we
 use some extra 12 bits to store the meta-data about each physical page frame.
-Means, we need total of 32-bits to represent any of the physical page frame in
-the memory.
+Means, we need total of 32-bits to represent any physical page frame in the
+main memory.
 
 Any process (at run time) can expand to use all of the available memory in the
 RAM. Hence, the page table of each process should have flexibility to store all
 the VPN->PFN associations. So, the size of total page table is:
 
-    = 32-bits * 1048576 (max possible page frames)
+    = 32-bits * 1048576 (maximum possible page frames)
     = 4 bytes * 1048576 = 4194304 bytes
                         = 4 MB.
 
@@ -139,8 +140,8 @@ processes running in the system we will waste huge memory just for paging.
 
 2. Also, suppose if a process needs to get some space with malloc for integer
 (just 4 bytes) and if process does not have any free space in the page already
-allocated, OS will give this process an extra page of 4 KB.
-(just for an extra 4-bytes). This problem is called "internal fragmentation".
+allocated, OS will give this process an extra page of 4 KB (Just for an extra
+4-bytes). This problem is called "internal fragmentation".
 
 Internal Fragmentation: For small sizes of memory needs, when OS gives a whole
 ----------------------  page to the process, it is called
@@ -149,6 +150,6 @@ Internal Fragmentation: For small sizes of memory needs, when OS gives a whole
                         a newly given page).
 
 Note: To solve the first issue of size of page table, if we increase the size of
-each page(to reduces the available pages, and hence the max page table entries),
-the internal fragmentation will increase because more memory will be wasted as
-explained above.
+each page(to reduce the available pages, and hence reduce the required page
+table entries per process), the internal fragmentation will increase because
+more memory will be wasted as explained above.
