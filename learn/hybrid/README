@@ -1,0 +1,112 @@
+With paging, we have lots of wastage of memory due to big page tables, which are
+actually not used.
+
+Note : For complete details about paging, please refer the paging section.
+
+In a 32-bit addressable RAM, the page table entries per process take 4MB, which
+is a huge memory waste because most of processes hardly use few pages, and due
+to this most of the page table entries are empty. Also, if there are so many
+processes running in an OS, its a huge memory wastage.
+
+Hence, we need to find proper solution to reduce the size of page tables.
+
+One possible solution to reduce the memory overhead of page tables, is to
+combine paging and segmentation. This is called "Hybrid approach".
+
+Hybrid Approach : Instead of having a single page table for the entire address
+---------------   space of the process, we can have one page table per logical
+                  segment. Thus, we might have 4 page tables per process(code
+                  page table, data page table, heap page table and stack page
+                  table).
+
+We can utilize the MMU's already existing "base" and "bound" registers. 'Base'
+register tells us the start point of a page table and bound register shows the
+maximum page table entries for that particular segment.
+
+Hence, we have 4 sets of base/bound registers. One for code, one for data one
+for heap and one for stack.
+
+We need to remember one point here, that base register for code does not point
+to the start address of our code region. It actually points to the start address
+of the page table for code.
+
+Similar to the code base register, heap base register points to the start
+address of the page table for heap and same is true for stack base register as
+well.
+
+Also, each bound register tell how many page table entries are present in that
+specific page table pointed by its base register.
+
+Page tables are always sequential (contiguous). Hence, whatever location a base
+pointer is pointing to, it has a page table in contiguous fashion. If more pages
+need to be added to this page table at run time, OS need to check the free
+list(by calling malloc) and copy all the already existing page table data there
+and also add the new VPN->PFN entry.
+
+Question : When OS need to resolve a logical address, then which base/bound
+register it has to check?
+
+The answer is that, we can decide that based on the first 2 bits of the virtual
+address.
+
+If first 2 bits are 00, PTE will be in first base/bound register. (Called code segment page table) 
+If first 2 bits are 01, PTE will be in second base/bound register. (Called data segment page table) 
+If first 2 bits are 10, PTE will be in third base/bound register. (Called heap segment page table) 
+If first 2 bits are 11, PTE will be in fourth base/bound register. (Called stack segment page table) 
+
+When a process is running, the base/bound registers are holding the addresses
+and sizes for that particular process and when there is a context switch, these
+base/bound registers are loaded with new page table addresses and sizes for the
+new process being executed.
+
+Note : With pure paging, (and with 32-bit addressable RAM) the max number of
+page table entries are : 2^20.
+But with this hybrid approach, we have four page tables and each of which can
+have max of 2^18 entries.
+  _______________________________________________________________________
+  |seg   |<--------VPN (18bits)--------->|<----------offset (12 bits)--->|
+  |2 bits|                               |                               |
+  ------------------------------------------------------------------------
+
+Steps:
+
+(1) when a logical address is accessed by the code, a TLB miss(suppose there is
+no entry in the TLB for the new process) occurs.
+(2) Now, we need to find the segment number from the logical address. First 2
+bits helps OS to check the correct base/bound register and find the start
+address of the page table where VPN->PFN association is present for this logical
+address.
+(3) Now, once the start address of the page table is taken from the base
+address, we can find the correct VPN->PFN association.
+
+We can write these steps as below:
+
+    SN              = (VirtualAddress & SEG_MASK) >> SN_SHIFT
+    VPN             = (VirtualAddress & VPN_MASK) >> VPN_SHIFT
+    AddressOfPTE    = Base[SN] + (VPN * sizeof(PTE))
+
+The above is almost same as a single page table we had with paging, but the only
+difference is that in the hybrid approach, the base address for the page table
+is now fetched with the base register. (With hybrid approach, we have 4 base
+addresses for each page table).
+
+An important difference here is that, along with each base register, we have a
+bound register as well, which restricts a user from accessing wrong page table
+entry.
+
+For example, suppose the code (first bits are 00), have only 3 pages, the page
+table for code segment will have only 3 entries to it, and bound register will
+be set to 3. Memory access beyond this will cause a segmentation fault.
+
+This way, we are occupying memory for the page table entries(per process) which
+are really required, and using a big 4MB of huge memory per process to hold page
+table entries.
+
+Problem with the hybrid approach:
+--------------------------------
+
+Each of the page table is now of different size and page tables are always
+contiguous. Due to this, whenever there is a increase/decrease in the page
+tables, We need to find proper place to store these PTE's. This again cause
+external fragmentation. Earlier the external fragmentation was related to the
+process itself, but now its related to the page tables. 
