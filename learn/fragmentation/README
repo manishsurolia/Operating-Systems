@@ -22,8 +22,8 @@ Segmentation : Each program is divided in contiguous sections(called segments),
 
 We can think of this as how 'malloc' allocates memory in heap region of each
 process. There is a free list maintained by the OS to keep record of each free
-space in the memory and when malloc is done to get contigious memory for any
-segment, OS goes through the free list and try to find suitable contigious
+space in the memory and when malloc is done to get contiguous memory for any
+segment, OS goes through the free list and try to find suitable contiguous
 memory to load the segment.
 
 Let's see an example,
@@ -90,8 +90,65 @@ problem of fragmentation is called "External fragmentation". It happens with
 segmentation technique of process allocation in RAM.
 
 External Fragmentation : This problem of having small chunk of memories at
-----------------------   differnet places in RAM, is called
+----------------------   different places in RAM, is called
                          "External fragmentation". This type of fragmentation
                          is caused by 'segmentation'.
  
 ===============================================================================
+
+Paging : Paging divides the whole program in same size of virtual pages and load
+------   them in the RAM's available page frames. For complete information on
+         paging, please refer the 'paging' section.
+
+We have an issue with paging, that OS need to maintain a page table for each
+process, and that that page table should have space to contain maximum of page
+frames, which can be available in the RAM.
+
+For example,
+
+If a RAM is 32-bit addressable, it has total byte addresses as below.
+
+    0x00000000 -   0xFFFFFFFF
+
+    (0)        -   4294967295
+
+Means, this RAM has 4294967296 bytes available, in total.
+and our page size is : 4096 bytes (4 KB).
+
+So, the total page frames available is : 4294967296/4096   =  1048576
+                                       : (2^32)    /(2^12) =  (2^20)
+
+Hence, we can represent any page frame of RAM with 20-bits and assume that we
+use some extra 12 bits to store the meta-data about each physical page frame.
+Means, we need total of 32-bits to represent any of the physical page frame in
+the memory.
+
+Any process (at run time) can expand to use all of the available memory in the
+RAM. Hence, the page table of each process should have flexibility to store all
+the VPN->PFN associations. So, the size of total page table is:
+
+    = 32-bits * 1048576 (max possible page frames)
+    = 4 bytes * 1048576 = 4194304 bytes
+                        = 4 MB.
+
+We have two issues with this approach of paging :
+
+1. Each process needs 4MB of space to store its page table. Even if a
+process is small, we need 4MB of space for page table. With hundreds of
+processes running in the system we will waste huge memory just for paging.
+
+2. Also, suppose if a process needs to get some space with malloc for integer
+(just 4 bytes) and if process does not have any free space in the page already
+allocated, OS will give this process an extra page of 4 KB.
+(just for an extra 4-bytes). This problem is called "internal fragmentation".
+
+Internal Fragmentation: For small sizes of memory needs, when OS gives a whole
+----------------------  page to the process, it is called
+                        "internal fragmentation", where almost complete page
+                        memory is wasted (like here, only 4 bytes are used from
+                        a newly given page).
+
+Note: To solve the first issue of size of page table, if we increase the size of
+each page(to reduces the available pages, and hence the max page table entries),
+the internal fragmentation will increase because more memory will be wasted as
+explained above.
