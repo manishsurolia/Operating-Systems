@@ -1,0 +1,13 @@
+The problem statement is, "How to reduce the size of linear page table"?
+
+The hybrid appraoch (please refer hybrid section for more details) has its own
+issues of external fragmentation. Hence, we are looking for a better approach.
+
+Multi-level page table basically chop up the whole linear page table into
+multiple pages and keep them at different place, and keep them only if they are
+required.
+
+To Understand the concept of multi-level page table more clearly, lets take an
+example here.
+
+Lets assume that we have 
