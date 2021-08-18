@@ -10,4 +10,150 @@ required.
 To Understand the concept of multi-level page table more clearly, lets take an
 example here.
 
-Lets assume that we have 
+(1) Lets assume that we have a small 14-bit addressable RAM and we keep
+PAGE_ASIZE as 64 bytes.
+
+Hence, total addresses we have :  0x0   -   2^14
+                                  0x0   -   16384 bytes
+
+Our PAGE_SIZE is : 64 bytes. (2^6)
+
+So, total number of pages are : ((2^14) / (2^6)) = 2^8 = 256 pages.
+
+Note that, a PFN can be addresses with just 8 bits (from 0 to 255).
+
+Hence, the RAM looks like below,
+
+PFN is 'Page Frame Number'.
+
+                    _____________________
+                    |                   |
+                    |      PFN 0        |
+                    |                   |
+                    ---------------------
+                    |                   |
+                    |      PFN 1        |
+                    |                   |
+                    ---------------------
+                    |                   |
+                    |      PFN 2        |
+                    |                   |
+                    ---------------------
+                    |                   |
+                    |                   |
+                    |                   |
+                    |                   |
+                    |                   |
+                    |                   |
+                    |                   |
+                    |                   |
+                    |                   |
+                    ---------------------
+                    |                   |
+                    |      PFN 255      |
+                    |                   |
+                    ---------------------
+
+(2) Linear page table : Here, the linear page table(per process) needs to have
+---------------------   sufficient placeholders to to keep all the PFN's, as a
+                        process can dynamically expand to the max of the RAM.
+
+We need 8 bits to have a PFN in a 'Page Table entry', and assume that we need
+extra 24 bits for PFN(looks un-realistic, but just assume to understand it)
+meta-data. Hence, our page table looks like below:
+
+PTE is "Page Table Entry".
+
+
+                    |<------- 32-bits ---------------->|
+                    |<-8 bits-><----- 24 bits -------->|
+
+                    ___________________________________
+                    |         |                        |
+         PTE 0      |         |                        |
+                    |         |                        |
+                    ------------------------------------
+                    |         |                        |
+         PTE 1      |         |                        |
+                    |         |                        |
+                    ------------------------------------
+                    |         |                        |
+         PTE 2      |         |                        |
+                    |         |                        |
+                    ------------------------------------
+                    |         |        |               |
+                    |         |        |               |
+                    |         |        |               |
+                    |         |        |               |
+                    |         |        |               |
+                    |         |        |               |
+                    |         |       \|/              |
+                    |         |                        |
+                    |         |                        |
+                    ------------------------------------
+                    |         |                        |
+         PTE 255    |         |                        |
+                    |         |                        |
+                    ------------------------------------
+
+Hence, the total size of our page table (per process) is :
+
+                        = 4 bytes * 256 = 1024 bytes (1 KB)
+
+Here, even if our process is a small process and utilize only 4 pages, the page
+table for that process will waste a lot of memory.
+
+(3) Lets assume that we compile a program to load in this device. Compiler
+generated a virtual address space for the program as below (Remember that its a
+virtual address space, and not yet loaded in the RAM). This starts at address
+0x0.
+
+                   |<----- 64 bytes --------------->|
+                   __________________________________
+                   |                                |
+   Virtual PAGE 0  |            Code                |
+                   |                                |
+                   ----------------------------------
+                   |                                |
+   Virtual PAGE 1  |            Code                |
+                   |                                |
+                   ----------------------------------
+                   |                                |
+   Virtual PAGE 2  |            Free                |
+                   |                                |
+                   ----------------------------------
+                   |                                |
+   Virtual PAGE 3  |            Heap                |
+                   |                                |
+                   ----------------------------------
+                   |                                |
+   Virtual PAGE 4  |            Heap                |
+                   |                                |
+                   ----------------------------------
+                   |                                |
+                   |                                |
+                   |                                |
+                   |    ----- all free ----         |
+                   |                                |
+                   |                                |
+                   |                                |
+                   ----------------------------------
+                   |                                |
+  Virtual PAGE 254 |            Stack               |
+                   |                                |
+                   ----------------------------------
+                   |                                |
+  Virtual PAGE 255 |            Stack               |
+                   |                                |
+                   ----------------------------------
+
+Here, we can see that this program just needs 6 pages from the memory to get
+loaded and executed. Only 6 VPN->PFN associations are needed here. That means
+we need only 6 entries in the page table. Hence, other spaces to store 250
+entries are a waste.
+
+(4) To solve this issue of memory waste due to extra page table spaces, lets use
+only the required page frames in memory by breaking the whole page table into
+multilple pages (of size 64 bytes), and keep all the them at different places.
+
+To do this,
