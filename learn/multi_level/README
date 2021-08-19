@@ -228,5 +228,161 @@ translation.
 
      PDEAddr = PageDirBase + (PDIndex * sizeof(PDE));
 
+(7) A Sample page directory looks like below,
+
+           PFN   valid?
+          ___________
+       0  | 100 | 1 |
+          -----------
+       1  | -   | 0 |
+          -----------
+       2  | -   | 0 |
+          -----------
+       3  | -   | 0 |
+          -----------
+       4  | -   | 0 |
+          -----------
+       5  | -   | 0 |
+          -----------
+       6  | -   | 0 |
+          -----------
+       7  | -   | 0 |
+          -----------
+       8  | -   | 0 |
+          -----------
+       9  | -   | 0 |
+          -----------
+       10 | -   | 0 |
+          -----------
+       11 | -   | 0 |
+          -----------
+       12 | -   | 0 |
+          -----------
+       13 | -   | 0 |
+          -----------
+       14 | -   | 0 |
+          -----------
+       15 | 101 | 1 |
+          -----------
+
+The page directory says, where(in which page frame number of RAM) each
+page of the page table is present.
 
 
+For example, the above page directory says that, only 2 pages(0th page and 15th
+page) of the page table exist in the RAM, at PFN 100 and 101.
+
+Note : During translations, if the page directory entry is marked invalid, we
+know that the access is invalid and raise an exception. If the PDE is valid,
+we have some more work to do.
+
+(8) In the above page table directory example, there are only 2 entries, because
+compiled program needs only 2 pages to store all PTE's and these 2 pages are
+stored at PFN 100 and 101.
+
+Note : From the generated virtual address, the next 4 bits(Index in page) are
+used to find the index in these pages to see where the actual program page is
+present.
+
+Below is again the same example for our reference. (A 14-bit address generated
+by compiler).
+
+Here, next 4 bits "Index in page" are used to find the index in the page of the
+page table where the actual program's code/data/heap/stack is present.
+
+  |<------------ VPN ------------>|<----- Offset -------->|
+  _________________________________________________________
+  |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+  ---------------------------------------------------------
+  |<------------->|<------------->|
+   Page Directory      Index in
+       Index             page
+
+Lets see how the pages at 100 and 101 looks like,
+
+
+          Page at PFN : 100                     Page at PFN : 101
+          -----------------                     -----------------
+
+           PFN  valid?  prot                     PFN  valid?  prot
+          __________________                    __________________
+       0  | 10  | 1 |  r-x |                 0  |  -  | 0 |  -   |
+          ------------------                    ------------------
+       1  | 23  | 1 |  r-x |                 1  |  -  | 0 |  -   |
+          ------------------                    ------------------
+       2  | -   | 0 |  -   |                 2  | -   | 0 |  -   |
+          ------------------                    ------------------
+       3  | -   | 0 |  -   |                 3  | -   | 0 |  -   |
+          ------------------                    ------------------
+       4  | 89  | 1 | rw-  |                 4  | -   | 0 |  -   |
+          ------------------                    ------------------
+       5  | 59  | 0 | rw-  |                 5  | -   | 0 |  -   |
+          ------------------                    ------------------
+       6  | -   | 0 |  -   |                 6  | -   | 0 |  -   |
+          ------------------                    ------------------
+       7  | -   | 0 |  -   |                 7  | -   | 0 |  -   |
+          ------------------                    ------------------
+       8  | -   | 0 |  -   |                 8  | -   | 0 |  -   |
+          ------------------                     ------------------
+       9  | -   | 0 |  -   |                 9  | -   | 0 |  -   |
+          ------------------                    ------------------
+       10 | -   | 0 |  -   |                 10 | -   | 0 |  -   |
+          ------------------                    ------------------
+       11 | -   | 0 |  -   |                 11 | -   | 0 |  -   |
+          ------------------                    ------------------
+       12 | -   | 0 |  -   |                 12 | -   | 0 |  -   |
+          ------------------                    ------------------
+       13 | -   | 0 |  -   |                 13 | -   | 0 |  -   |
+          ------------------                    ------------------
+       14 | -   | 0 |  -   |                 14 | 55  | 1 |  rw- |
+          ------------------                    ------------------
+       15 | -   | 0 |  -   |                 15 | 45  | 1 |  rw- |
+          ------------------                    ------------------
+
+Page at PFN 100 contains related PFN's for code and heap data, and page at
+PFN 101 contains related PFN's for stack data. (from the example in point 3).
+
+(9) Once we find the final PFN, just replace the first 8 bits of the generated
+virtual address with this PFN and we have the actual address with us.
+
+In, the above example, instead of having all 16 linear pages of page table,
+we are having only the required pages and we keep allocating the page and update
+the entries in the "Page table directory". For example, if heap needs more
+memory, OS can allocate one more page to it and make entries in the page table
+directory.
+
+The above saving of memory is very significant, and if we see the same in the
+context of a 32-bit or 64-bit addressable RAM, the saving will be huge.
+
+(10) Example:
+
+Lets translate an address generated by compiler. Lets assume that compiler
+generates an address as below:
+
+                    0x3F80
+
+The 14-bit address look like below:
+
+  11 1111 1000 0000
+
+Lets take first 4 bits : 1111 .
+
+This means, 15th entry in the page directory, we need to refer.
+
+The page directory above (point 7) tells us the related PFN is 101.
+
+Now, lets take next 4 bits (1110) go to the PFN 101 and search for 14th(1110)
+entry.
+
+14th entry in the page at PFN 101 tells us to take the PFN 45.
+
+We take this PFN and just replace the first 8 bits of the the actual VPN with
+this PFN as below:
+
+         00101101 000000
+
+The address comes as : 0xB40
+
+Reference : https://pages.cs.wisc.edu/~remzi/OSTEP/vm-smalltables.pdf
+
+Note : The above write-up is just for understanding purpose.
