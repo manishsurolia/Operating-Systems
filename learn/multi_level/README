@@ -382,7 +382,3 @@ this PFN as below:
          00101101 000000
 
 The address comes as : 0xB40
-
-Reference : https://pages.cs.wisc.edu/~remzi/OSTEP/vm-smalltables.pdf
-
-Note : The above write-up is just for understanding purpose.
