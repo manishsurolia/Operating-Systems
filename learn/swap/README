@@ -39,21 +39,44 @@ usually asks you to assign a space for the swap partition.
 - Do you need swap?
 -------------------
 
-    This is a question many novice users ask themselves when they begin to
-discover Linux.
+With so many processes running in an OS, it is not possible for OS to keep all
+the process in memory all the time. Also, if a single process is bigger than
+the available memory in RAM, OS can't keep this process in RAM.
 
-In fact, this will depend on the use and amount of RAM your computer has.
-Nevertheless, having a swap space is desirable even if you have a lot of RAM.
+So, the idea is that, we keep only the required 'PAGES' of a process in the
+memory, and keep all the other PAGES(not required at the moment) in hard-disk,
+called as swap memory.
 
-For example, usually when your RAM gets full and Linux kernel has no space to
-write into, you system will crash.
+To achieve this, the very first thing OS needs to do is that, it needs to know
+how much swap memory it has in hard-disk to keep the PAGES. The more swap
+memory it has, the more PAGES OS can keep inside it.
 
-On the other hand, if you have a swap space, it will be used by the Linux kernel
-and your system will keep working, though much slower.
+With using swap memory from hard-disk, there are 2 options for OS:
 
-So, it is always safer to have a swap space.
+1. Load all the pages of a process in memory and later move out some if it needs
+to make some space in memory.
+2. Load only the required pages from hard-disk to memory and later move them to
+the swap memory on need basis.
 
-Note : Swap space has on disadvantage - It is much slower than RAM.
+On each virtual memory access:
+
+Get the VPN from a virtual address and check the TLB:
+    if (TLB hit, VPN->PFN is present)
+        -> Replace VPN with PFN in virtual address, this is your physical
+           address.
+    else (TLB Miss, VPN->PFN is not present)
+        -> Go and check the process page table using 'Page table base register'.
+            if ("Page hit", 'presence' bit in PTE is 'TRUE')
+                -> Replace TLB with the VPN->PFN association and search the
+                    TLB again.
+            else ("Page fault", 'presence' bit in the PTE is 'FALSE')
+                -> Find the page in the swap memory and load this page in the
+                    RAM (using some policy like LRU), and then modify the PTE
+                    for related VPN->PFN associations, also modify the TLB for
+                    the same and look for the VPN->PFN again in the TLB.
+
+Note : Swap space has on disadvantage - It is much slower than RAM, because
+swap-out and swap-in of pages in hard-disk, is slower.
 
 So, adding a swap space wont make your computer faster, it will only help to
 overcome some limitations posed by the RAM size.
