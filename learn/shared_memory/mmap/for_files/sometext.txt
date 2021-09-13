@@ -1,0 +1,3 @@
+ThIs iS JuSt a sMaLl eXpErImEnT To sEe tHe dIfFeReNcE BeTwEeN:
+- uSiNg mMaP To lOaD A FiLe dAtA In vIrTuAl mEmOrY AnD ThEn dO OpErAtIoNs oN ThAt.
+- DiReCtLy dOiNg fIlE OpErAtIoNs uSiNg fIlE SyStEm cAlLs.
