@@ -1,0 +1,49 @@
+The below explanation of cache is taken from "Structured Compuer organization"
+by "Andrew S. Tanenbaum".
+
+The basic idea behind a cache is simple: the most heavily used memory words
+are kept in the cache. When the CPU needs a word, it first looks in the cache.
+Only if the word is not there does it go to main memory. If a substantial
+fraction of the words are in the cache, the average access time can be greatly
+reduced.
+
+Success or failure thus depends on what fraction of the words are in the cache.
+For years, people have known that programs do not access their memories
+completely at random. If a given memory reference is to address A, it is likely
+that the next memory reference will be in the general vicinity of A. A simple
+example is the program itself. Except for branches and procedure calls,
+instructions are fetched from consecutive locations in memory. Furthermore, most
+program execution time is spent in loops, in which a limited number of
+instructions are executed over and over. Similarly, a matrix manipulation
+program is likely to make many references to the same matrix before moving on to
+something else.
+
+The observation that the memory references made in any short time interval tend
+to use only a small fraction of the total memory is called the locality
+principle and forms the basis for all caching systems. The general idea is that
+when a word is referenced, it and some of its neighbors are brought from the
+large slow memory into the cache, so that the next time it is used, it can be
+accessed quickly.
+
+To see the effect of cache, this program given here takes a matrix 2-D array,
+and try to access it in 2 ways.
+
+(1) Access sequentially. Read the matrix 2-D array address after address.
+
+array[i][j], array[i][j+1], array[i][j+2]...etc.
+
+(2) Access non-seuquentially. Read the matrix 2-D array with big gaps of memory
+references.
+
+array[j][i], array[j][i+1], array[j][i+2]...etc.
+
+Time taken for 2-D matrix sequential READ's is much lesser than the time taken
+for 2-D matrix non-sequential READS.
+
+[ ] gcc cache.c
+[ ] ./a.out
+(Sequential READS in 2-D Array) :
+Result : 100000000, Total time taken : 240245299 nanoseconds
+
+(Non-Sequential READS in 2-D Array) :
+Result : 100000000, Total time taken : 1383529367 nanoseconds
