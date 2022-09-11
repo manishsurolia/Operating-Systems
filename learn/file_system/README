@@ -1,0 +1,137 @@
+It is just a basic implementation of a file system. A very simple file
+system.
+
+Design:
+
+- Let's say we have a hard disk of size 1GB (2^30)
+
+- mmap a file(1GB) in the address space of this program
+
+- Linux file operations(read/write..etc) will be used to operate the hard
+  disk
+
+- Divide this hard disk in blocks (block size : 4096 bytes (2^12))
+  Total blocks = 2^30/2^12 = 2^18 = 262144 blocks
+
+- File system will start with a super block(first block).
+
+- Each file's meta-data will be present in an i-node related to it.
+
+- All inodes will be present just before the data blocks start
+
+- inodes are just an array of inode structure. Each inode structure
+  represents meta-data of a file
+
+- Let's fix the number of continues blocks used to store inodes array. That
+  will also fix the number of inodes, which can fit in these blocks.
+
+- inode structure size = 256(2^8) bytes. Just an assumption that 256 bytes
+  will fit all meta-data about a file. We will see later whether we need to
+  change it or not. For now, let's take it as 256 (2^8) bytes.
+
+- let's take 64(2^6) continues blocks to store inodes.
+  Means,
+         total bytes =   Blocks reserved for inodes * bytes per block
+                     =   2^6 * 2^12 bytes
+                     =   2^18 bytes
+
+         inodes      =   total bytes / bytes needed for each inode
+                     =   2^18 / 2^8
+                     =   2^10
+                     =   1024
+
+  That means, we can create maximum of 1024 files in this file system.
+
+- Note here that a file creation in this file system depends on 2 factors.
+  (1) Whether inode is available or not (1024 max. can be created).
+  (2) Once a file gets an inode, getting data space to store file's contents
+  will depend on whether data blocks has space or not. Initially every file
+  has size as 0. (Means, there is an inode present for this file, but no
+  data has been written in this file yet. When data is written to this file
+  data block will be occupied for this inode, then this file will have size
+  as non-zero. Also, we say that we give size to a file in terms of blocks.
+  when data is created for a file, we will assign a block(4096 bytes) to it
+  and when the data will exceed, we will give another block to it.
+
+- At any time, we should know what all inodes are free(out of 1024) and what
+  all data blocks are free. These two informations are useful while saving a
+  file and its contents in the hard disk. Status of an inode(used or free)
+  can be saved in a single bit and also status of a data block(used or free)
+  can also be saved in a bit.
+
+- One block is enough to represent all the inode status. Actually it has a
+  lot more bits than required. But its okay, let's keep at least one block
+  for simplicity of the implementation.
+
+     One block   = 4096 bytes.
+                 = 4096 * 8 bits.
+                 = 32768 bits
+
+- Let's see how many blocks are needed to represent all the blocks in this
+  hard disk. Though we need to represent only the data blocks, but to keep
+  the implementation simple, lets take some blocks which can represent all
+  the blocks in this hard disk(rather representing only the data block)
+
+  Total bytes in the hard disk = 2^30
+  Size of a block = 2^12
+  Total blocks = 2^30 / 2^12 = 2^18
+
+  We need some blocks of hard disk, which can represent all the blocks of the
+  hard disk using bits.
+
+  Total bits in 1 block  = Total bytes in one block * bits per byte
+                         = 2^12 * 2^3
+                         = 2^15
+
+  One block has 2^15 bits. Hence, needed number of blocks to represent status
+  of each block is,
+                         = Total number of blocks / Total bits per block
+                         = 2^18 / 2^15
+                         = 2^3
+                         = 8 blocks.
+
+ Hence, 8 blocks are enough to represent status(used or free) of each block
+ in the hard disk.
+
+ So, after all these considerations, our hard disk will look like this,
+
+
+ |<------------------------------------ 1 GB --------------------------------->|
+ -------------------------------------------------------------------------------
+ |  |  |         |                     |                                       |
+ |  |  |         |                     |                                       |
+ |  |  |         |                     |                                       |
+ |  |  |         |                     |                                       |
+ |  |  |         |                     |                                       |
+ -------------------------------------------------------------------------------
+  ^  ^        ^               ^                      ^
+  |  |        |               |                      |
+  |  |        |               |                      |
+  |  |        |               |                  Data Blocks
+  |  |        |               |                  (2^18 - 74) blocks
+  |  |        |               |         (starting address : 0x0004A000)
+  |  |        |               | (size : 0x3FFB6000 bytes, 99% of total disk)
+  |  |        |               |
+  |  |        |               |
+  |  |        |               ------------------I-node blocks (64 blocks)
+  |  |        |                         (starting address : 0x0000A000)
+  |  |        |                             (size : 0x40000 bytes)
+  |  |        |      (per inode size = 256 bytes, Total inodes/files : 1024)
+  |  |        |
+  |  |        |
+  |  |        ----------------------------------Data blocks free list
+  |  |                                               (8 Blocks)
+  |  |                                  (starting address : 0x00002000)
+  |  |                                      (size : 0x8000 bytes)
+  |  |
+  |  |
+  |  -------------------------------------------I-Nodes free list
+  |                                                  (1 Block)
+  |                                    (starting address : 0x00001000)
+  |                                         (size : 0x1000 bytes)
+  |
+  |
+  ----------------------------------------------Super Block
+                                                 (1 Block)
+                                       (starting address : 0x00000000)
+                                            (size : 0x1000 bytes)
