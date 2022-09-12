@@ -10,6 +10,9 @@ Design:
 - Linux file operations(read/write..etc) will be used to operate the hard
   disk
 
+- There is no directory/folder system in our file system. That means, there is
+  no hierarchy. This file system has a flat structure.
+
 - Divide this hard disk in blocks (block size : 4096 bytes (2^12))
   Total blocks = 2^30/2^12 = 2^18 = 262144 blocks
 
