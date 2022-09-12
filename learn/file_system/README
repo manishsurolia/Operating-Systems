@@ -3,27 +3,27 @@ system.
 
 Design:
 
-- Let's say we have a hard disk of size 1GB (2^30)
+- Let's say we have a hard disk of size 1GB (2^30).
 
-- mmap a file(1GB) in the address space of this program
+- mmap a file(1GB) in the address space of this program.
 
 - Linux file operations(read/write..etc) will be used to operate the hard
-  disk
+  disk.
 
 - There is no directory/folder system in our file system. That means, there is
   no hierarchy. This file system has a flat structure.
 
 - Divide this hard disk in blocks (block size : 4096 bytes (2^12))
-  Total blocks = 2^30/2^12 = 2^18 = 262144 blocks
+  Total blocks = 2^30/2^12 = 2^18 = 262144 blocks.
 
 - File system will start with a super block(first block).
 
 - Each file's meta-data will be present in an i-node related to it.
 
-- All inodes will be present just before the data blocks start
+- All inodes will be present just before the data blocks start.
 
 - inodes are just an array of inode structure. Each inode structure
-  represents meta-data of a file
+  represents meta-data of a file.
 
 - Let's fix the number of continues blocks used to store inodes array. That
   will also fix the number of inodes, which can fit in these blocks.
@@ -73,7 +73,7 @@ Design:
 - Let's see how many blocks are needed to represent all the blocks in this
   hard disk. Though we need to represent only the data blocks, but to keep
   the implementation simple, lets take some blocks which can represent all
-  the blocks in this hard disk(rather representing only the data block)
+  the blocks in this hard disk(rather representing only the data block).
 
   Total bytes in the hard disk = 2^30
   Size of a block = 2^12
