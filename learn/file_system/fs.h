@@ -72,6 +72,6 @@ typedef struct super_block {
             void *inode_arr_start_address;
             void *data_blocks_start_adddress;
         }data;
-        char buffer[BLOCK_SIZE];
+        char buffer[BLOCK_SIZE]; // Taking a whole block as super block
     };
 }super_block;
