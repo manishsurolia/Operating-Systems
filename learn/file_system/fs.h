@@ -58,6 +58,7 @@ typedef struct inode {
             unsigned int magic; // inode magic number.
             unsigned char file_name[FILE_NAME_LEN];
             unsigned int status;
+            unsigned long long file_size; // file size in bytes
         }data;
         char buffer[INODE_SIZE]; // Keep each inode size as 'INODE_SIZE'.
     };
@@ -66,11 +67,14 @@ typedef struct inode {
 typedef struct super_block {
     union {
         struct {
-            unsigned int magic; // super block magic number
+            unsigned int magic; // Super block magic number
             void *inode_free_list_start_address;
             void *data_free_list_start_address;
             void *inode_arr_start_address;
             void *data_blocks_start_adddress;
+            unsigned int free_inode_bit; // Next free bit in I-node free list
+            unsigned int free_data_block_bit; // Next free bit in data block
+                                              // free list
         }data;
         char buffer[BLOCK_SIZE]; // Taking a whole block as super block
     };
