@@ -14,7 +14,12 @@
 #define INODE_MAGIC 0xAB1234EF
 #define SUPER_BLOCK_MAGIC 0x12ABCD34
 #define FILE_NAME_LEN 32
+#define BITS_PER_BYTE 8
 
+#define FILE_CLOSED 0
+#define FILE_OPENED 1
+#define FILE_NOT_FOUND -1
+#define NO_FREE_INODE -1
 /*
  * Super block.
  * One block is sufficient to store file system related data.
@@ -52,12 +57,27 @@
     (INODES_ARRAY_START_OFFSET + INODES_ARRAY_SIZE)
 #define DATA_BLOCKS_SIZE 0x40000 // In bytes
 
+/*
+ * Bit operations on array.
+ */
+#define SET_BIT_IN_ARRAY(arr, bit) \
+    arr[bit / (sizeof(*arr) * BITS_PER_BYTE)] |= \
+    1 << (bit % (sizeof(*arr) * BITS_PER_BYTE));
+
+#define CLEAR_BIT_IN_ARRAY(arr, bit) \
+    arr[bit / (sizeof(*arr) * BITS_PER_BYTE)] &= \
+    ~(1 << (bit % (sizeof(*arr) * BITS_PER_BYTE)));
+
+#define TEST_BIT_IN_ARRAY(arr, bit) \
+    arr[bit / (sizeof(*arr) * BITS_PER_BYTE)] & \
+    (1 << (bit % (sizeof(*arr) * BITS_PER_BYTE)))
+
 typedef struct inode {
     union {
         struct {
             unsigned int magic; // inode magic number.
             unsigned char file_name[FILE_NAME_LEN];
-            unsigned int status;
+            unsigned int status; // OPEN or CLOSED
             unsigned long long file_size; // file size in bytes
         }data;
         char buffer[INODE_SIZE]; // Keep each inode size as 'INODE_SIZE'.
@@ -72,9 +92,6 @@ typedef struct super_block {
             void *data_free_list_start_address;
             void *inode_arr_start_address;
             void *data_blocks_start_adddress;
-            unsigned int free_inode_bit; // Next free bit in I-node free list
-            unsigned int free_data_block_bit; // Next free bit in data block
-                                              // free list
         }data;
         char buffer[BLOCK_SIZE]; // Taking a whole block as super block
     };
