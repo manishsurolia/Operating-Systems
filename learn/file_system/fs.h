@@ -58,19 +58,22 @@
 #define DATA_BLOCKS_SIZE 0x40000 // In bytes
 
 /*
- * Bit operations on array.
+ * Bit operations on an array of char. The passed array must be a char array.
+ * Marking it as int or long array will involve endianness issues.
+ * With just char array, below 3 bitwise operation macros should work fine with
+ * any endian(little or big) machine.
  */
 #define SET_BIT_IN_ARRAY(arr, bit) \
     arr[bit / (sizeof(*arr) * BITS_PER_BYTE)] |= \
-    1 << (bit % (sizeof(*arr) * BITS_PER_BYTE));
+    ((0x80) >> (bit % (sizeof(*arr) * BITS_PER_BYTE)));
 
 #define CLEAR_BIT_IN_ARRAY(arr, bit) \
     arr[bit / (sizeof(*arr) * BITS_PER_BYTE)] &= \
-    ~(1 << (bit % (sizeof(*arr) * BITS_PER_BYTE)));
+    ~((0x80) >> (bit % (sizeof(*arr) * BITS_PER_BYTE)));
 
 #define TEST_BIT_IN_ARRAY(arr, bit) \
     arr[bit / (sizeof(*arr) * BITS_PER_BYTE)] & \
-    (1 << (bit % (sizeof(*arr) * BITS_PER_BYTE)))
+    ((0x80) >> (bit % (sizeof(*arr) * BITS_PER_BYTE)))
 
 typedef struct inode {
     union {
