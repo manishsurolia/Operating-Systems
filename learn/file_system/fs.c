@@ -80,7 +80,7 @@ int fs_create_file(void *fs_base_address, char *name)
 {
     super_block *sb = fs_base_address;
     int free_inode_bit = NO_FREE_INODE;
-    unsigned int *free_inode_bit_array;
+    unsigned char *free_inode_bit_array;
     struct inode *inode_table;
 
     if (!sb || !name) {
@@ -97,7 +97,10 @@ int fs_create_file(void *fs_base_address, char *name)
     free_inode_bit_array = sb->data.inode_free_list_start_address;
     inode_table = sb->data.inode_arr_start_address;
 
-    // Find the free bit in inode free list.
+    /*
+     * Find whether the file is already present. If present, just reuturn the
+     * inode number.
+     */
     for (unsigned int i=0; i<INODE_MAX; i++) {
         if (TEST_BIT_IN_ARRAY(free_inode_bit_array, i)) {
             if (!strcmp(inode_table[i].data.file_name, name)) {
@@ -106,10 +109,9 @@ int fs_create_file(void *fs_base_address, char *name)
         }
     }
 
-
     // Find the free bit in inode free list.
     for (unsigned int i=0; i<INODE_MAX; i++) {
-        if (!TEST_BIT_IN_ARRAY(free_inode_bit_array, i)) {
+        if (!(TEST_BIT_IN_ARRAY(free_inode_bit_array, i))) {
             free_inode_bit = i;
             break;
         }
