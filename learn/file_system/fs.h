@@ -16,6 +16,7 @@
 #define FILE_NAME_LEN 32
 #define BITS_PER_BYTE 8
 
+#define FILE_ERR -1
 #define FILE_CLOSED 0
 #define FILE_OPENED 1
 #define FILE_NOT_FOUND -1
@@ -62,6 +63,7 @@
  * Marking it as int or long array will involve endianness issues.
  * With just char array, below 3 bitwise operation macros should work fine with
  * any endian(little or big) machine.
+ * TBD: show pictorically, how we are using bits in array of char
  */
 #define SET_BIT_IN_ARRAY(arr, bit) \
     arr[bit / (sizeof(*arr) * BITS_PER_BYTE)] |= \
