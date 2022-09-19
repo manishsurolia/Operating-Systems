@@ -231,6 +231,32 @@ int fs_delete_file(void *fs_base_address, char *name)
     return inode_bit;
 }
 
+int fs_list_files(void *fs_base_address)
+{
+    super_block *sb = fs_base_address;
+    unsigned char *free_inode_bit_array;
+    struct inode *inode_table;
+
+    if (!sb) {
+        printf("%s : Wrong base_address passed.\n", __func__);
+        return FILE_ERR;
+    }
+
+    free_inode_bit_array = sb->data.inode_free_list_start_address;
+    inode_table = sb->data.inode_arr_start_address;
+
+    /*
+     * Find the free bit in inode free list.
+     */
+    for (unsigned int i=0; i<INODE_MAX; i++) {
+        if (TEST_BIT_IN_ARRAY(free_inode_bit_array, i)) {
+            printf("%s\n", inode_table[i].data.file_name);
+        }
+    }
+
+    return 0;
+}
+
 int main(void)
 {
     void *fs_base_address;
