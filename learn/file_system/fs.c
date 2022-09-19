@@ -246,7 +246,7 @@ int fs_list_files(void *fs_base_address)
     inode_table = sb->data.inode_arr_start_address;
 
     /*
-     * Find the free bit in inode free list.
+     * Search for all the occupied inode bits and print the related file names.
      */
     for (unsigned int i=0; i<INODE_MAX; i++) {
         if (TEST_BIT_IN_ARRAY(free_inode_bit_array, i)) {
