@@ -231,6 +231,10 @@ int fs_delete_file(void *fs_base_address, char *name)
     return inode_bit;
 }
 
+/*
+ * This function is just to list the files, already existing in the file
+ * sysetem.
+ */
 int fs_list_files(void *fs_base_address)
 {
     super_block *sb = fs_base_address;
