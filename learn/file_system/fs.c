@@ -261,19 +261,41 @@ int fs_list_files(void *fs_base_address)
     return 0;
 }
 
+/*
+ * Below function is just to test the functionalities of file system.
+ * Fow now, just doing file create and file delete, but later we can improve on
+ * this once file open/close and read/write functions are also present.
+ * We can also use hexdump utility on the created 'file' to see the contents of
+ * the file system.
+ * [ ] hexdump -C file
+ */
+void test(void *fs_base_address)
+{
+    char buff[64];
+
+    for (unsigned int i=0; i<INODE_MAX; i++) {
+        sprintf(buff, "file%d", i);
+        fs_create_file(fs_base_address, buff);
+    }
+    for (unsigned int i=0; i<INODE_MAX-10; i++) {
+        sprintf(buff, "file%d", i);
+        fs_delete_file(fs_base_address, buff);
+    }
+    fs_list_files(fs_base_address);
+    return;
+}
+
 int main(void)
 {
     void *fs_base_address;
     int fd = 0;
-    fs_format();
+    fs_format(); // Need to do only first time, later we can comment this out.
     printf("format complete.\n");
     fs_base_address = fs_mount(&fd);
     if (!fs_base_address) {
         printf("No file system present.\n");
     }
-    fs_create_file(fs_base_address, "file1");
-    fs_create_file(fs_base_address, "file2");
-    fs_create_file(fs_base_address, "file3");
+    test(fs_base_address);
     fs_unmount(fs_base_address, fd);
     return 0;
 }
