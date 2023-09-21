@@ -12,9 +12,14 @@
 #define BYTES_IN_1GB 1*1024*1024*1024
 
 /*
+ * Base address of the file system.
+ */
+static void *fs_base_address;
+
+/*
  * Erase all data in the disk and mark first block as super block.
  */
-void fs_format(void)
+void format (void)
 {
     void *base_address;
     char *buf;
@@ -48,7 +53,7 @@ void fs_format(void)
 /*
  * Mount already existing disk.
  */
-void *fs_mount(int *fd)
+void *mount (int *fd)
 {
     void *base_address;
     struct inode *inode_table;
@@ -102,9 +107,9 @@ void *fs_mount(int *fd)
 /*
  * Un-mount already existing disk.
  */
-void fs_unmount(void *base_address, int fd)
+void unmount (int fd)
 {
-    munmap(base_address, BYTES_IN_1GB);
+    munmap(fs_base_address, BYTES_IN_1GB);
     close(fd);
     return;
 }
@@ -113,7 +118,7 @@ void fs_unmount(void *base_address, int fd)
  * Return 'FILE_ERR' if fails, otherwise return offset of inode free list
  * bitmap.
  */
-int fs_create_file(void *fs_base_address, char *name)
+int create (char *name)
 {
     super_block *sb = fs_base_address;
     int free_inode_bit = NO_FREE_INODE;
@@ -189,7 +194,7 @@ int fs_create_file(void *fs_base_address, char *name)
 /*
  * Return 'FILE_ERR' if fails, inode bit entry on sucess.
  */
-int fs_delete_file(void *fs_base_address, char *name)
+int delete (char *name)
 {
     super_block *sb = fs_base_address;
     int inode_bit = FILE_NOT_FOUND;
@@ -235,7 +240,7 @@ int fs_delete_file(void *fs_base_address, char *name)
  * This function is just to list the files, already existing in the file
  * sysetem.
  */
-int fs_list_files(void *fs_base_address)
+int list (void)
 {
     super_block *sb = fs_base_address;
     unsigned char *free_inode_bit_array;
@@ -269,33 +274,32 @@ int fs_list_files(void *fs_base_address)
  * the file system.
  * [ ] hexdump -C file
  */
-void test(void *fs_base_address)
+void test (void *fs_base_address)
 {
     char buff[64];
 
     for (unsigned int i=0; i<INODE_MAX; i++) {
         sprintf(buff, "file%d", i);
-        fs_create_file(fs_base_address, buff);
+        create(buff);
     }
     for (unsigned int i=0; i<INODE_MAX-10; i++) {
         sprintf(buff, "file%d", i);
-        fs_delete_file(fs_base_address, buff);
+        delete(buff);
     }
-    fs_list_files(fs_base_address);
+    list();
     return;
 }
 
-int main(void)
+int main (void)
 {
-    void *fs_base_address;
     int fd = 0;
-    fs_format(); // Need to do only first time, later we can comment this out.
+    format(); // Need to do only first time, later we can comment this out.
     printf("format complete.\n");
-    fs_base_address = fs_mount(&fd);
+    fs_base_address = mount(&fd);
     if (!fs_base_address) {
         printf("No file system present.\n");
     }
     test(fs_base_address);
-    fs_unmount(fs_base_address, fd);
+    unmount(fd);
     return 0;
 }
