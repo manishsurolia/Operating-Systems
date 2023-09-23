@@ -1,8 +1,8 @@
-malloc helps us to get us more memory during programs execution.
+malloc helps us to get more memory during programs execution.
 Let's see where malloc gets memory from?
 
-As we know, in linux, a process memory is divided into multiple multiple memory
-segments, like data segment, code segment, heap segment..etc.
+As we know, in linux, a process memory is divided into multiple memory segments,
+like data segment, code segment, heap segment..etc.
 
 Let's write a simple program and see the process memory layout.
 
@@ -166,11 +166,11 @@ The heap size has now become = 0x55b4734d1000 - 0x55b473488000
                              = 0x49000
                              = 0x49 pages = 73 pages
 
-Meaning, with 'sbrk' call, this process memory has got another 40 pages to its
+Meaning, with 'brk' call, this process memory has got another 40 pages to its
 heap.
 
 Conclusion : when 'malloc' does not find the sufficient memory available with
-heap of the process, then it calls 'sbrk' to increase the size of the heap
+heap of the process, then it calls 'brk' to increase the size of the heap
 memory. OS provides more memory pages to the process from the whole available
 free list of the pages with OS at that point. Then process virtual memory
 address space start using those pages for heap by updating the process page
