@@ -138,7 +138,7 @@ Got the address : 0x55b4734a6af0
 Now, our process heap end address points to '0x55b4734d1000'. Look at the whole
 process memory layout again as below,
 
-[root@archlinux ~]# cat /proc/1415/maps
+[ ] cat /proc/1415/maps
 55b4730f8000-55b4730f9000 r--p 00000000 00:18 66334                      /root/manish/test1/a.out
 55b4730f9000-55b4730fa000 r-xp 00001000 00:18 66334                      /root/manish/test1/a.out
 55b4730fa000-55b4730fb000 r--p 00002000 00:18 66334                      /root/manish/test1/a.out
@@ -185,7 +185,7 @@ heap.
 Let's try to allocate more memory than the available 33 pages with heap as
 below,
 
-[root@archlinux test1]# cat test.c
+[ ] cat test.c
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
