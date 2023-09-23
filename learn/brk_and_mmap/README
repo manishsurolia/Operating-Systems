@@ -1,0 +1,216 @@
+malloc helps us to get us more memory during programs execution.
+Let's see where malloc gets memory from?
+
+As we know, in linux, a process memory is divided into multiple multiple memory
+segments, like data segment, code segment, heap segment..etc.
+
+Let's write a simple program and see the process memory layout.
+
+#include <stdio.h>
+#include <unistd.h>
+
+int main(void) 
+{
+    printf("Process id : %d\n", getpid());
+    while (1) {
+    }
+    return 0;
+}
+
+Now Compile this program and execute in backgroud.
+
+[ ] gcc test.c
+[ ] ./a.out &
+Process id : 1308
+
+Now, check all the maps related to this process as below,
+
+[ ]# cat /proc/1309/maps
+5645b3a2b000-5645b3a2c000 r--p 00000000 00:18 66270                      /root/manish/test1/a.out
+5645b3a2c000-5645b3a2d000 r-xp 00001000 00:18 66270                      /root/manish/test1/a.out
+5645b3a2d000-5645b3a2e000 r--p 00002000 00:18 66270                      /root/manish/test1/a.out
+5645b3a2e000-5645b3a2f000 r--p 00002000 00:18 66270                      /root/manish/test1/a.out
+5645b3a2f000-5645b3a30000 rw-p 00003000 00:18 66270                      /root/manish/test1/a.out
+5645b4dd5000-5645b4df6000 rw-p 00000000 00:00 0                          [heap]
+7fca4a400000-7fca4a426000 r--p 00000000 00:18 4030                       /usr/lib/libc.so.6
+7fca4a426000-7fca4a585000 r-xp 00026000 00:18 4030                       /usr/lib/libc.so.6
+7fca4a585000-7fca4a5da000 r--p 00185000 00:18 4030                       /usr/lib/libc.so.6
+7fca4a5da000-7fca4a63e000 r--p 001d9000 00:18 4030                       /usr/lib/libc.so.6
+7fca4a63e000-7fca4a640000 rw-p 0023d000 00:18 4030                       /usr/lib/libc.so.6
+7fca4a640000-7fca4a64d000 rw-p 00000000 00:00 0
+7fca4a778000-7fca4a77c000 rw-p 00000000 00:00 0
+7fca4a783000-7fca4a784000 r--p 00000000 00:18 4021                       /usr/lib/ld-linux-x86-64.so.2
+7fca4a784000-7fca4a7aa000 r-xp 00001000 00:18 4021                       /usr/lib/ld-linux-x86-64.so.2
+7fca4a7aa000-7fca4a7b4000 r--p 00027000 00:18 4021                       /usr/lib/ld-linux-x86-64.so.2
+7fca4a7b4000-7fca4a7b6000 r--p 00031000 00:18 4021                       /usr/lib/ld-linux-x86-64.so.2
+7fca4a7b6000-7fca4a7b8000 rw-p 00033000 00:18 4021                       /usr/lib/ld-linux-x86-64.so.2
+7ffc9b30b000-7ffc9b32c000 rw-p 00000000 00:00 0                          [stack]
+7ffc9b3f8000-7ffc9b3fc000 r--p 00000000 00:00 0                          [vvar]
+7ffc9b3fc000-7ffc9b3fe000 r-xp 00000000 00:00 0                          [vdso]
+ffffffffff600000-ffffffffff601000 --xp 00000000 00:00 0                  [vsyscall]
+
+This is the whole memory layout of the program we are running above.
+The size of heap is : 0x5645b4df6000 - 0x5645b4dd5000 = 0x21000 bytes.
+
+1 page size : 0x1000 (4096 bytes)
+[ ] getconf PAGE_SIZE
+4096
+
+Hence, the heap size is : 0x21000/0x1000 = 0x21 pages = 33 pages.
+
+Now, lets try to call 'malloc' 4 times for 10 pages each. First 3 times
+(for 30 pages), it very well fits in the already given heap segment so should
+not be an issue for 'malloc' library function to provide us memory but we need
+to see what happens when we call malloc 4th time for the next 10 pages.
+
+Below is the program to check it,
+
+[ ] cat test.c
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+
+#define TEN_PAGES 10*4096
+
+[ ] vim test.c
+int main(void)
+{
+    printf("Process id : %d.\n", getpid());
+    for (int i=0; i<4; i++) {
+        printf("Enter");
+        getchar();
+        printf("Got the address : %p\n", malloc (TEN_PAGES));
+    }
+    getchar();
+    return 0;
+}
+
+Compile it now as as below,
+
+[ ] gcc test.c
+[ ] strace ./a.out  <-- [I will paste only the required strace output below]
+Process id : 1415.
+
+check the memmory layout of this process in a different shell.
+
+[ ] cat /proc/1415/maps
+55b4730f8000-55b4730f9000 r--p 00000000 00:18 66334                      /root/manish/test1/a.out
+55b4730f9000-55b4730fa000 r-xp 00001000 00:18 66334                      /root/manish/test1/a.out
+55b4730fa00e-55b4730fb000 r--p 00002000 00:18 66334                      /root/manish/test1/a.out
+55b4730fb000-55b4730fc000 r--p 00002000 00:18 66334                      /root/manish/test1/a.out
+55b4730fc000-55b4730fd000 rw-p 00003000 00:18 66334                      /root/manish/test1/a.out
+55b473488000-55b4734a9000 rw-p 00000000 00:00 0                          [heap]
+7fc2d6800000-7fc2d6826000 r--p 00000000 00:18 4030                       /usr/lib/libc.so.6
+7fc2d6826000-7fc2d6985000 r-xp 00026000 00:18 4030                       /usr/lib/libc.so.6
+7fc2d6985000-7fc2d69da000 r--p 00185000 00:18 4030                       /usr/lib/libc.so.6
+7fc2d69da000-7fc2d6a3e000 r--p 001d9000 00:18 4030                       /usr/lib/libc.so.6
+7fc2d6a3e000-7fc2d6a40000 rw-p 0023d000 00:18 4030                       /usr/lib/libc.so.6
+7fc2d6a40000-7fc2d6a4d000 rw-p 00000000 00:00 0
+7fc2d6bd7000-7fc2d6bdb000 rw-p 00000000 00:00 0
+7fc2d6be2000-7fc2d6be3000 r--p 00000000 00:18 4021                       /usr/lib/ld-linux-x86-64.so.2
+7fc2d6be3000-7fc2d6c09000 r-xp 00001000 00:18 4021                       /usr/lib/ld-linux-x86-64.so.2
+7fc2d6c09000-7fc2d6c13000 r--p 00027000 00:18 4021                       /usr/lib/ld-linux-x86-64.so.2
+7fc2d6c13000-7fc2d6c15000 r--p 00031000 00:18 4021                       /usr/lib/ld-linux-x86-64.so.2
+7fc2d6c15000-7fc2d6c17000 rw-p 00033000 00:18 4021                       /usr/lib/ld-linux-x86-64.so.2
+7fff7c210000-7fff7c231000 rw-p 00000000 00:00 0                          [stack]
+7fff7c3b3000-7fff7c3b7000 r--p 00000000 00:00 0                          [vvar]
+7fff7c3b7000-7fff7c3b9000 r-xp 00000000 00:00 0                          [vdso]
+ffffffffff600000-ffffffffff601000 --xp 00000000 00:00 0                  [vsyscall]
+[ ]
+
+The heap size here is : 33 pages.
+
+Let's press enter where the program is getting executed and check the memory
+layout again, we don't see any change in that because our program has just taken
+only 10 pages from the available 33 pages of heap with this process. Again
+press 'Enter' for 2 more times and we will not see any difference in the heap
+memory layout.
+
+Got the address : 0x55b473488ac0
+Got the address : 0x55b473492ad0
+Got the address : 0x55b47349cae0
+
+But as soon as you enter 4th time, you will see below strace output,
+
+brk(0x55b4734d1000)                     = 0x55b4734d1000
+Got the address : 0x55b4734a6af0
+
+Now, our process heap end address points to '0x55b4734d1000'. Look at the whole
+process memory layout again as below,
+
+[root@archlinux ~]# cat /proc/1415/maps
+55b4730f8000-55b4730f9000 r--p 00000000 00:18 66334                      /root/manish/test1/a.out
+55b4730f9000-55b4730fa000 r-xp 00001000 00:18 66334                      /root/manish/test1/a.out
+55b4730fa000-55b4730fb000 r--p 00002000 00:18 66334                      /root/manish/test1/a.out
+55b4730fb000-55b4730fc000 r--p 00002000 00:18 66334                      /root/manish/test1/a.out
+55b4730fc000-55b4730fd000 rw-p 00003000 00:18 66334                      /root/manish/test1/a.out
+55b473488000-55b4734d1000 rw-p 00000000 00:00 0                          [heap]
+7fc2d6800000-7fc2d6826000 r--p 00000000 00:18 4030                       /usr/lib/libc.so.6
+7fc2d6826000-7fc2d6985000 r-xp 00026000 00:18 4030                       /usr/lib/libc.so.6
+7fc2d6985000-7fc2d69da000 r--p 00185000 00:18 4030                       /usr/lib/libc.so.6
+7fc2d69da000-7fc2d6a3e000 r--p 001d9000 00:18 4030                       /usr/lib/libc.so.6
+7fc2d6a3e000-7fc2d6a40000 rw-p 0023d000 00:18 4030                       /usr/lib/libc.so.6
+7fc2d6a40000-7fc2d6a4d000 rw-p 00000000 00:00 0
+7fc2d6bd7000-7fc2d6bdb000 rw-p 00000000 00:00 0
+7fc2d6be2000-7fc2d6be3000 r--p 00000000 00:18 4021                       /usr/lib/ld-linux-x86-64.so.2
+7fc2d6be3000-7fc2d6c09000 r-xp 00001000 00:18 4021                       /usr/lib/ld-linux-x86-64.so.2
+7fc2d6c09000-7fc2d6c13000 r--p 00027000 00:18 4021                       /usr/lib/ld-linux-x86-64.so.2
+7fc2d6c13000-7fc2d6c15000 r--p 00031000 00:18 4021                       /usr/lib/ld-linux-x86-64.so.2
+7fc2d6c15000-7fc2d6c17000 rw-p 00033000 00:18 4021                       /usr/lib/ld-linux-x86-64.so.2
+7fff7c210000-7fff7c231000 rw-p 00000000 00:00 0                          [stack]
+7fff7c3b3000-7fff7c3b7000 r--p 00000000 00:00 0                          [vvar]
+7fff7c3b7000-7fff7c3b9000 r-xp 00000000 00:00 0                          [vdso]
+ffffffffff600000-ffffffffff601000 --xp 00000000 00:00 0                  [vsyscall]
+
+The heap size has now become = 0x55b4734d1000 - 0x55b473488000
+                             = 0x49000
+                             = 0x49 pages = 73 pages
+
+Meaning, with 'sbrk' call, this process memory has got another 40 pages to its
+heap.
+
+Conclusion : when 'malloc' does not find the sufficient memory available with
+heap of the process, then it calls 'sbrk' to increase the size of the heap
+memory. OS provides more memory pages to the process from the whole available
+free list of the pages with OS at that point. Then process virtual memory
+address space start using those pages for heap by updating the process page
+table.
+
+The above conclusion is good when the amount of memory is quite less than the
+avaiable memory with heap, but when the requested size is bigger than the
+avaible heap, malloc calls 'mmap'. 'mmap' also gets more free pages from OS,
+but that memory is not part of the heap. That is created separatly from the
+heap. 
+
+Let's try to allocate more memory than the available 33 pages with heap as
+below,
+
+[root@archlinux test1]# cat test.c
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+
+#define THIRTY_FIVE_PAGES 35*4096
+
+int main(void)
+{
+    printf("Process id : %d.\n", getpid());
+    getchar();
+    printf("Got the address : %p\n", malloc (THIRTY_FIVE_PAGES));
+    getchar();
+    return 0;
+}
+
+[ ] gcc test.c
+[ ] strace ./a.out
+Process id : 1468
+mmap(NULL, 147456, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f729bdf3000
+
+Check the memory layout when program is stcuk at the second 'getchar()'.
+You will find that this returned address from mmap is not part of the heap
+memory.
+
+Also, we can directly call 'mmap' in our program rather than calling through
+'malloc'.
+
+For more details on brk, sbrk and mmap, please check their map pages in linux.
