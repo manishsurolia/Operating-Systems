@@ -1,1 +1,142 @@
-Operating System related programs.
+This explanation is about static relocation with respect to the GCC linker or
+linkers in general.
+
+When a C file is compiled by gcc compiler without calling linker, compiler has
+the view of only those functions and global vars which are defined in that c
+file. Hence, compiler creates a memory layout for this c file starting from
+address 0x0 and the same is done for all the c files compiled.
+
+When all these C files are combined together then linker need draw a new layout
+of memory for the final executable which will include content of both the object
+files.
+
+Creating a new address layout for the final executable from all the object files
+is called static relocation by the linker where locations of the function/global
+vars are relocated from their original addresses in the object files.
+
+For example, lets take 2 .c files, test1.c and test2.c as below,
+
+test1.c
+-------
+
+#include <stdio.h>
+
+extern void test2 (void);
+
+void test1 (void)
+{
+    printf("Test1\n");
+    test2();
+}
+
+int main(void)
+{
+    test1();
+    return 0;
+}
+
+test2.c
+-------
+
+#include <stdio.h>
+
+void test2 (void)
+{
+    printf("Test2\n");
+}
+
+Now, Just create object files for both of them without linking, as below,
+
+[ ] gcc -c test1.c -o test1.o
+[ ] gcc -c test2.c -o test2.o
+
+Run objdump for both the object files,
+Note : Adding only a snippet of the whole objdump output here.
+
+[ ] objdump -D test1.o
+
+Disassembly of section .text:
+0000000000000000 <test1>:
+   0:   f3 0f 1e fa             endbr64
+   4:   55                      push   %rbp
+   5:   48 89 e5                mov    %rsp,%rbp
+   8:   48 8d 05 00 00 00 00    lea    0x0(%rip),%rax        # f <test1+0xf>
+   f:   48 89 c7                mov    %rax,%rdi
+  12:   e8 00 00 00 00          call   17 <test1+0x17>
+  17:   e8 00 00 00 00          call   1c <test1+0x1c>
+  1c:   90                      nop
+  1d:   5d                      pop    %rbp
+  1e:   c3                      ret
+
+000000000000001f <main>:
+  1f:   f3 0f 1e fa             endbr64
+  23:   55                      push   %rbp
+  24:   48 89 e5                mov    %rsp,%rbp
+  27:   e8 00 00 00 00          call   2c <main+0xd>
+  2c:   b8 00 00 00 00          mov    $0x0,%eax
+  31:   5d                      pop    %rbp
+  32:   c3                      ret
+
+
+[ ] objdump -D test2.o
+
+Disassembly of section .text:
+0000000000000000 <test2>:
+   0:   f3 0f 1e fa             endbr64
+   4:   55                      push   %rbp
+   5:   48 89 e5                mov    %rsp,%rbp
+   8:   48 8d 05 00 00 00 00    lea    0x0(%rip),%rax        # f <test2+0xf>
+   f:   48 89 c7                mov    %rax,%rdi
+  12:   e8 00 00 00 00          call   17 <test2+0x17>
+  17:   90                      nop
+  18:   5d                      pop    %rbp
+  19:   c3                      ret
+
+As you can see above that both object files 'test1.o' and 'test2.o' have their
+functions 'test1' and 'test2' at the address 0x0.
+
+Now, link both the object files now and the see the addresses of each function
+in the final executable.
+
+[ ] gcc test1.o test2.o -o final
+[ ] objdump -D final
+
+0000000000001149 <test1>:
+    1149:       f3 0f 1e fa             endbr64
+    114d:       55                      push   %rbp
+    114e:       48 89 e5                mov    %rsp,%rbp
+    1151:       48 8d 05 ac 0e 00 00    lea    0xeac(%rip),%rax        # 2004 <_IO_stdin_used+0x4>
+    1158:       48 89 c7                mov    %rax,%rdi
+    115b:       e8 f0 fe ff ff          call   1050 <puts@plt>
+    1160:       e8 17 00 00 00          call   117c <test2>
+    1165:       90                      nop
+    1166:       5d                      pop    %rbp
+    1167:       c3                      ret
+
+0000000000001168 <main>:
+    1168:       f3 0f 1e fa             endbr64
+    116c:       55                      push   %rbp
+    116d:       48 89 e5                mov    %rsp,%rbp
+    1170:       e8 d4 ff ff ff          call   1149 <test1>
+    1175:       b8 00 00 00 00          mov    $0x0,%eax
+    117a:       5d                      pop    %rbp
+    117b:       c3                      ret
+
+000000000000117c <test2>:
+    117c:       f3 0f 1e fa             endbr64
+    1180:       55                      push   %rbp
+    1181:       48 89 e5                mov    %rsp,%rbp
+    1184:       48 8d 05 7f 0e 00 00    lea    0xe7f(%rip),%rax        # 200a <_IO_stdin_used+0xa>
+    118b:       48 89 c7                mov    %rax,%rdi
+    118e:       e8 bd fe ff ff          call   1050 <puts@plt>
+    1193:       90                      nop
+    1194:       5d                      pop    %rbp
+    1195:       c3                      ret
+
+As we can see above both functions 'test1' and 'test2' have been finally placed
+at the addresses '0x1149' and '0x117c' compare to 0x0 in the first object files. 
+
+Note: The above addresses are not the final addresses where program in going to
+load in memory. We can call these addresses "reltive addresses" as they are
+basically the offset from the address where the program is going to load in the
+memory. 
