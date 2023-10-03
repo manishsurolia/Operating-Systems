@@ -1,0 +1,140 @@
+ASLR(Address space layout randomization) is a technique used by different OSes,
+by which OS provides different memory layouts for each segment of the process,
+each time a program is loaded in the memory.
+
+In other words, each time we load our program, the virtual address boundaries
+are going be different. For example, if we print the address of a global
+variable in a small c program, we will see different address for it every time
+the program is newly executed.
+
+test.c
+------
+#include <stdio.h>
+#include <unistd.h>
+
+int global_var;
+
+int main(void)
+{
+    printf("pid : %d, Address of global var is : %p\n", getpid(), &global_var);
+    getchar();
+    return 0;
+}
+
+[ ] cat /proc/sys/kernel/randomize_va_space <-- Shows the status of ASLR
+2                                           <-- '2' means, ASLR is active.
+
+[ ] gcc test.c
+
+[ ] ./a.out
+pid : 6149, Address of global var is : 0x562304275014
+
+[ ] ./a.out
+pid : 6150, Address of global var is : 0x555ec9a6a014
+
+Above, we can see that with ASLR activated, with each load of the
+program(./a.out), the variable has got a different address. This means, the
+address layout is at different virtual addresses each time this program is
+loaded.
+
+Now, Let's confirm this by looking at /proc/<pid>/maps file for each run of the
+program. To do that, open different shell windows to the same linux and check
+the memory layout when program is there is there is the memory. To achive tihs,
+I have used 'getchar()' to pause the program after showing 'pid'. 
+
+[ ] ./a.out
+pid : 5982, Address of global var is : 0x55aaeda37014
+
+Run below is a separate window, when program is in run state.
+
+[ ] cat /proc/5982/maps
+55aaeda33000-55aaeda34000 r--p 00000000 08:02 796189                     /home/manish/manish/OS/learn/ASLR/a.out
+55aaeda34000-55aaeda35000 r-xp 00001000 08:02 796189                     /home/manish/manish/OS/learn/ASLR/a.out
+55aaeda35000-55aaeda36000 r--p 00002000 08:02 796189                     /home/manish/manish/OS/learn/ASLR/a.out
+55aaeda36000-55aaeda37000 r--p 00002000 08:02 796189                     /home/manish/manish/OS/learn/ASLR/a.out
+55aaeda37000-55aaeda38000 rw-p 00003000 08:02 796189                     /home/manish/manish/OS/learn/ASLR/a.out
+55aaedce5000-55aaedd06000 rw-p 00000000 00:00 0                          [heap]
+7f422d600000-7f422d622000 r--p 00000000 08:02 5781406                    /usr/lib/x86_64-linux-gnu/libc.so.6
+7f422d622000-7f422d79a000 r-xp 00022000 08:02 5781406                    /usr/lib/x86_64-linux-gnu/libc.so.6
+7f422d79a000-7f422d7f2000 r--p 0019a000 08:02 5781406                    /usr/lib/x86_64-linux-gnu/libc.so.6
+7f422d7f2000-7f422d7f6000 r--p 001f1000 08:02 5781406                    /usr/lib/x86_64-linux-gnu/libc.so.6
+7f422d7f6000-7f422d7f8000 rw-p 001f5000 08:02 5781406                    /usr/lib/x86_64-linux-gnu/libc.so.6
+7f422d7f8000-7f422d805000 rw-p 00000000 00:00 0
+7f422d941000-7f422d944000 rw-p 00000000 00:00 0
+7f422d958000-7f422d95a000 rw-p 00000000 00:00 0
+7f422d95a000-7f422d95b000 r--p 00000000 08:02 5781225                    /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7f422d95b000-7f422d983000 r-xp 00001000 08:02 5781225                    /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7f422d983000-7f422d98d000 r--p 00029000 08:02 5781225                    /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7f422d98d000-7f422d98f000 r--p 00033000 08:02 5781225                    /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7f422d98f000-7f422d991000 rw-p 00035000 08:02 5781225                    /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7fffab6f0000-7fffab711000 rw-p 00000000 00:00 0                          [stack]
+7fffab727000-7fffab72b000 r--p 00000000 00:00 0                          [vvar]
+7fffab72b000-7fffab72d000 r-xp 00000000 00:00 0                          [vdso]
+ffffffffff600000-ffffffffff601000 --xp 00000000 00:00 0                  [vsyscall]
+
+Now, stop the program, run it again and check the memory layout again.
+
+[ ] ./a.out
+pid : 6127, Address of global var is : 0x55fecf983014
+
+[ ] cat /proc/6127/maps
+55fecf97f000-55fecf980000 r--p 00000000 08:02 796189                     /home/manish/manish/OS/learn/ASLR/a.out
+55fecf980000-55fecf981000 r-xp 00001000 08:02 796189                     /home/manish/manish/OS/learn/ASLR/a.out
+55fecf981000-55fecf982000 r--p 00002000 08:02 796189                     /home/manish/manish/OS/learn/ASLR/a.out
+55fecf982000-55fecf983000 r--p 00002000 08:02 796189                     /home/manish/manish/OS/learn/ASLR/a.out
+55fecf983000-55fecf984000 rw-p 00003000 08:02 796189                     /home/manish/manish/OS/learn/ASLR/a.out
+55fed1795000-55fed17b6000 rw-p 00000000 00:00 0                          [heap]
+7f2f1d200000-7f2f1d222000 r--p 00000000 08:02 5781406                    /usr/lib/x86_64-linux-gnu/libc.so.6
+7f2f1d222000-7f2f1d39a000 r-xp 00022000 08:02 5781406                    /usr/lib/x86_64-linux-gnu/libc.so.6
+7f2f1d39a000-7f2f1d3f2000 r--p 0019a000 08:02 5781406                    /usr/lib/x86_64-linux-gnu/libc.so.6
+7f2f1d3f2000-7f2f1d3f6000 r--p 001f1000 08:02 5781406                    /usr/lib/x86_64-linux-gnu/libc.so.6
+7f2f1d3f6000-7f2f1d3f8000 rw-p 001f5000 08:02 5781406                    /usr/lib/x86_64-linux-gnu/libc.so.6
+7f2f1d3f8000-7f2f1d405000 rw-p 00000000 00:00 0
+7f2f1d57b000-7f2f1d57e000 rw-p 00000000 00:00 0
+7f2f1d592000-7f2f1d594000 rw-p 00000000 00:00 0
+7f2f1d594000-7f2f1d595000 r--p 00000000 08:02 5781225                    /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7f2f1d595000-7f2f1d5bd000 r-xp 00001000 08:02 5781225                    /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7f2f1d5bd000-7f2f1d5c7000 r--p 00029000 08:02 5781225                    /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7f2f1d5c7000-7f2f1d5c9000 r--p 00033000 08:02 5781225                    /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7f2f1d5c9000-7f2f1d5cb000 rw-p 00035000 08:02 5781225                    /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7fff2097d000-7fff2099e000 rw-p 00000000 00:00 0                          [stack]
+7fff209a2000-7fff209a6000 r--p 00000000 00:00 0                          [vvar]
+7fff209a6000-7fff209a8000 r-xp 00000000 00:00 0                          [vdso]
+ffffffffff600000-ffffffffff601000 --xp 00000000 00:00 0                  [vsyscall]
+
+As we can see above that each program memory segment has been given a different
+virtual address space.
+
+Benefits: 
+---------
+
+Address space layout randomization (ASLR) is a memory-protection process for
+operating systems (OSes) that guards against buffer-overflow attacks by
+randomizing the location where system executables are loaded into memory.
+
+The success of many cyberattacks, particularly zero-day exploits, relies on the
+hacker's ability to know or guess the position of processes and functions in
+memory. ASLR is able to put address space targets in unpredictable locations.
+If an attacker attempts to exploit an incorrect address space location, the
+target application will crash, stopping the attack and alerting the system. 
+
+Note:
+----
+
+Sometimes, it becomes difficult to debug a program when ASLR is ON, so we can
+disable the ASLR feature of the linux by doing below,
+
+[ ] sudo sysctl -w kernel.randomize_va_space=0
+[ ] cat /proc/sys/kernel/randomize_va_space
+
+Now, run the program again to see the impact.
+
+[ ] ./a.out
+pid : 6165, Address of global var is : 0x555555558014
+
+[ ] ./a.out
+pid : 6166, Address of global var is : 0x555555558014
+
+Here, you can see that the address of the global var is same. We can check the
+complete address layout with ASLR off as we did earlier. The address layout will
+be exactly same.
