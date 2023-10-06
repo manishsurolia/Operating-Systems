@@ -1,0 +1,226 @@
+This note is about how execution is redirected to a shared library function,
+when that function is called in the executable.
+
+dynamic library function calls happen with the use of an indirection method,
+explained with below example,
+
+Let's say we have a small program like this, where function 'printf' is actually
+part of a shared library (libc) rather than part of the same executable.
+
+#include <stdio.h>
+int main(void)
+{
+    printf("Hello world!!");
+    return 0;
+}
+
+Compile this program and load it in gdb debugger as below.
+
+[ ] gcc -g test.c -o test
+[ ] gdb test
+
+(gdb) b main
+Breakpoint 1 at 0x1151: file test.c, line 5.
+
+(gdb) run
+Breakpoint 1, main () at test.c:5
+5           printf("Hello world!!");
+
+(gdb) disassemble
+Dump of assembler code for function main:
+   0x0000555555555149 <+0>:     endbr64
+   0x000055555555514d <+4>:     push   %rbp
+   0x000055555555514e <+5>:     mov    %rsp,%rbp
+=> 0x0000555555555151 <+8>:     lea    0xeac(%rip),%rax        # 0x555555556004
+   0x0000555555555158 <+15>:    mov    %rax,%rdi
+   0x000055555555515b <+18>:    mov    $0x0,%eax
+   0x0000555555555160 <+23>:    call   0x555555555050 <printf@plt>
+   0x0000555555555165 <+28>:    mov    $0x0,%eax
+   0x000055555555516a <+33>:    pop    %rbp
+   0x000055555555516b <+34>:    ret
+End of assembler dump.
+
+Look closely at the 'printf' call. Here, It is not calling the real 'printf',
+which is present the library but rather calling a wrapper function, which is
+present in this process text segment (this area of the text segment is called
+plt (procedure linkage table) section).
+
+To verify this do below in another shell and check which address range of the
+process which has this address '0x555555555050'.
+
+[ ] ps -eaf | grep test
+kernoops     855       1  0 16:43 ?        00:00:00 /usr/sbin/kerneloops --test
+manish      2865    1729  0 18:01 pts/1    00:00:00 gdb test
+manish      2871    2865  0 18:01 pts/1    00:00:00 /home/manish/manish/OS/learn/dynamic_linking/test
+manish      2880    2786  0 18:09 pts/2    00:00:00 grep --color=auto test
+
+[ ] cat /proc/2871/maps
+555555554000-555555555000 r--p 00000000 08:02 917994                     /home/manish/manish/OS/learn/dynamic_linking/test
+555555555000-555555556000 r-xp 00001000 08:02 917994                     /home/manish/manish/OS/learn/dynamic_linking/test
+555555556000-555555557000 r--p 00002000 08:02 917994                     /home/manish/manish/OS/learn/dynamic_linking/test
+555555557000-555555558000 r--p 00002000 08:02 917994                     /home/manish/manish/OS/learn/dynamic_linking/test
+555555558000-555555559000 rw-p 00003000 08:02 917994                     /home/manish/manish/OS/learn/dynamic_linking/test
+7ffff7c00000-7ffff7c22000 r--p 00000000 08:02 5767552                    /usr/lib/x86_64-linux-gnu/libc.so.6
+7ffff7c22000-7ffff7d9a000 r-xp 00022000 08:02 5767552                    /usr/lib/x86_64-linux-gnu/libc.so.6
+7ffff7d9a000-7ffff7df2000 r--p 0019a000 08:02 5767552                    /usr/lib/x86_64-linux-gnu/libc.so.6
+7ffff7df2000-7ffff7df6000 r--p 001f1000 08:02 5767552                    /usr/lib/x86_64-linux-gnu/libc.so.6
+7ffff7df6000-7ffff7df8000 rw-p 001f5000 08:02 5767552                    /usr/lib/x86_64-linux-gnu/libc.so.6
+7ffff7df8000-7ffff7e05000 rw-p 00000000 00:00 0
+7ffff7fa9000-7ffff7fac000 rw-p 00000000 00:00 0
+7ffff7fc0000-7ffff7fc2000 rw-p 00000000 00:00 0
+7ffff7fc2000-7ffff7fc6000 r--p 00000000 00:00 0                          [vvar]
+7ffff7fc6000-7ffff7fc8000 r-xp 00000000 00:00 0                          [vdso]
+7ffff7fc8000-7ffff7fc9000 r--p 00000000 08:02 5767547                    /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7ffff7fc9000-7ffff7ff1000 r-xp 00001000 08:02 5767547                    /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7ffff7ff1000-7ffff7ffb000 r--p 00029000 08:02 5767547                    /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7ffff7ffb000-7ffff7ffd000 r--p 00033000 08:02 5767547                    /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7ffff7ffd000-7ffff7fff000 rw-p 00035000 08:02 5767547                    /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7ffffffde000-7ffffffff000 rw-p 00000000 00:00 0                          [stack]
+ffffffffff600000-ffffffffff601000 --xp 00000000 00:00 0                  [vsyscall]
+
+We can see that this address belongs to,
+
+555555555000-555555556000 r-xp 00001000 08:02 917994                     /home/manish/manish/OS/learn/dynamic_linking/test
+
+As this segment has 'x' privileges to it, this is a code segment of the process.
+This means, our code has a wrapper function 'printf' in the plt section of the
+code segment.
+
+Now, lets proceed in the gdb with 'si' instruction of gdb, so that, we execute
+the instruction one by one and see where the execution is really going,
+
+(gdb) si
+0x0000555555555158      5           printf("Hello world!!");
+(gdb) si
+0x000055555555515b      5           printf("Hello world!!");
+(gdb) si
+0x0000555555555160      5           printf("Hello world!!");
+(gdb) disassemble
+Dump of assembler code for function main:
+   0x0000555555555149 <+0>:     endbr64
+   0x000055555555514d <+4>:     push   %rbp
+   0x000055555555514e <+5>:     mov    %rsp,%rbp
+   0x0000555555555151 <+8>:     lea    0xeac(%rip),%rax        # 0x555555556004
+   0x0000555555555158 <+15>:    mov    %rax,%rdi
+   0x000055555555515b <+18>:    mov    $0x0,%eax
+=> 0x0000555555555160 <+23>:    call   0x555555555050 <printf@plt>
+   0x0000555555555165 <+28>:    mov    $0x0,%eax
+   0x000055555555516a <+33>:    pop    %rbp
+   0x000055555555516b <+34>:    ret
+End of assembler dump.
+(gdb)
+
+with one more 'si', execution will jump to our local printf function wrapper at
+the address '0x555555555050'.
+
+(gdb) si
+0x0000555555555050 in printf@plt ()
+(gdb) si
+0x0000555555555054 in printf@plt ()
+(gdb) disassemble
+Dump of assembler code for function printf@plt:
+   0x0000555555555050 <+0>:     endbr64
+=> 0x0000555555555054 <+4>:     jmp    *0x2f76(%rip)        # 0x555555557fd0 <printf@got.plt>
+   0x000055555555505a <+10>:    nopw   0x0(%rax,%rax,1)
+End of assembler dump.
+
+Here, in this local printf wrapper function execution making an unconditional
+jump to the value it gets from '%rip + 0x2f76'. This memory address is in the
+Global Offset Table (GOT), which is present in the data segment of this running
+process.
+
+GOT : Global offset table is an address table which provides function addresses
+(of dynamically linked libraries) to the executables at run time. This whole
+table is present in the data segment of the process.
+
+The value present at the address '%rip + 0x2f76' is the address of the real libc
+printf function.
+
+Let's try to get the location of GOT table which will give us the function
+pointer address of the real 'printf' function in 'glibc'.
+
+(gdb) info registers rip
+rip            0x555555555054      0x555555555054 <printf@plt+4>
+
+Note : 'rip' is an instruction pointer register which holds the address of the
+instruction which is getting executed at present.
+
+Hence, the value of '%rip + 0x2f76' is : 0x555555555054 + 0x2f76
+                                       = 0x555555557FCA
+
+Check what is present at this address. The value we get from here is the real
+printf(libc) function address.
+
+(gdb) x /20x 0x555555557FCA
+0x555555557fca: 0x00000000      0x5ef00000      0x7ffff7c5      0x3ac00000
+0x555555557fda: 0x7ffff7c2      0x00000000      0x00000000      0x00000000
+0x555555557fea: 0x00000000      0x00000000      0x00000000      0xe4b00000
+0x555555557ffa: 0x7ffff7c3      0x00000000      0x00000000      0x80080000
+0x55555555800a: 0x55555555      0x00000000      0x00000000      0x00000000
+
+The address present at this location is : 0x7ffff7c55ef0
+
+So, this is the address of real printf function. Check the memory maps above
+and try to find which memory range it belongs to?
+
+This address '0x7ffff7c55ef0' belongs to the below memory segment(taken from
+above memory map details of the process). This again is an executable segment
+('x'), and mmap'ed by the dynamic loader at the start of the process.
+
+7ffff7c22000-7ffff7d9a000 r-xp 00022000 08:02 5767552                    /usr/lib/x86_64-linux-gnu/libc.so.6
+
+This whole executable file '/usr/lib/x86_64-linux-gnu/libc.so.6' is mmap'ed in
+these 178 vritual pages of the process. To get the size of this segment subtract
+0x7ffff7c22000 from 0x7ffff7d9a000 and divide the result by 0x1000 (4096) as the
+size of each page is 4096 bytes.
+
+[ ] getconf PAGE_SIZE
+4096
+
+Let's continue in the gdb with 'si' command as below. It will surely jump to the
+address '0x7ffff7c55ef0', which is part of the libc pages.
+
+(gdb) si
+(gdb) disassemble
+Dump of assembler code for function __printf:
+=> 0x00007ffff7c55ef0 <+0>:     endbr64
+   0x00007ffff7c55ef4 <+4>:     sub    $0xd8,%rsp
+   0x00007ffff7c55efb <+11>:    mov    %rsi,0x28(%rsp)
+   0x00007ffff7c55f00 <+16>:    mov    %rdx,0x30(%rsp)
+   0x00007ffff7c55f05 <+21>:    mov    %rcx,0x38(%rsp)
+   0x00007ffff7c55f0a <+26>:    mov    %r8,0x40(%rsp)
+   0x00007ffff7c55f0f <+31>:    mov    %r9,0x48(%rsp)
+   0x00007ffff7c55f14 <+36>:    test   %al,%al
+   0x00007ffff7c55f16 <+38>:    je     0x7ffff7c55f4f <__printf+95>
+   0x00007ffff7c55f18 <+40>:    movaps %xmm0,0x50(%rsp)
+   0x00007ffff7c55f1d <+45>:    movaps %xmm1,0x60(%rsp)
+   0x00007ffff7c55f22 <+50>:    movaps %xmm2,0x70(%rsp)
+   0x00007ffff7c55f27 <+55>:    movaps %xmm3,0x80(%rsp)
+   0x00007ffff7c55f2f <+63>:    movaps %xmm4,0x90(%rsp)
+   0x00007ffff7c55f37 <+71>:    movaps %xmm5,0xa0(%rsp)
+   0x00007ffff7c55f3f <+79>:    movaps %xmm6,0xb0(%rsp)
+   0x00007ffff7c55f47 <+87>:    movaps %xmm7,0xc0(%rsp)
+   0x00007ffff7c55f4f <+95>:    mov    %fs:0x28,%rax
+   0x00007ffff7c55f58 <+104>:   mov    %rax,0x18(%rsp)
+   0x00007ffff7c55f5d <+109>:   xor    %eax,%eax
+   0x00007ffff7c55f5f <+111>:   lea    0xe0(%rsp),%rax
+   0x00007ffff7c55f67 <+119>:   mov    %rsp,%rdx
+   0x00007ffff7c55f6a <+122>:   xor    %ecx,%ecx
+   0x00007ffff7c55f6c <+124>:   mov    %rax,0x8(%rsp)
+   0x00007ffff7c55f71 <+129>:   lea    0x20(%rsp),%rax
+   0x00007ffff7c55f76 <+134>:   mov    %rdi,%rsi
+   0x00007ffff7c55f79 <+137>:   mov    %rax,0x10(%rsp)
+   0x00007ffff7c55f7e <+142>:   mov    0x19fe9b(%rip),%rax        # 0x7ffff7df5e20
+   0x00007ffff7c55f85 <+149>:   movl   $0x8,(%rsp)
+   0x00007ffff7c55f8c <+156>:   mov    (%rax),%rax
+   0x00007ffff7c55f8f <+159>:   movl   $0x30,0x4(%rsp)
+   0x00007ffff7c55f97 <+167>:   mov    %rax,%rdi
+   0x00007ffff7c55f9a <+170>:   call   0x7ffff7c60920 <__vfprintf_internal>
+   0x00007ffff7c55f9f <+175>:   mov    0x18(%rsp),%rdx
+   0x00007ffff7c55fa4 <+180>:   sub    %fs:0x28,%rdx
+   0x00007ffff7c55fad <+189>:   jne    0x7ffff7c55fb7 <__printf+199>
+   0x00007ffff7c55faf <+191>:   add    $0xd8,%rsp
+   0x00007ffff7c55fb6 <+198>:   ret
+   0x00007ffff7c55fb7 <+199>:   call   0x7ffff7d2f0e0 <__stack_chk_fail>
+End of assembler dump.
+(gdb)
