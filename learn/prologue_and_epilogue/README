@@ -1,0 +1,146 @@
+Prologue and epilogues are sections of the assembly code of a function, which
+actually do not represent the real logic of the function, but needed to execute
+the function properly and also return to the caller of that function
+successfully.
+
+Below is a small code to understand this.
+#include <stdio.h>
+
+int add (int a, int b)
+{
+    int c;
+    c = a + b;
+    return c;
+}
+
+int main (void)
+{
+    int a,b,c;
+    a = 10;
+    b = 20;
+    c = add(a, b);
+    printf("Result : %d\n", c);
+    return 0;
+}
+
+Note : I am using Intel x86_64 machine to compile and run this code.
+
+[ ] arch
+x86_64
+
+Compile and load the program in gdb as below,
+
+[ ] gcc test.c  -O0 -g -o test
+[ ] gdb test
+(gdb) b main
+(gdb) run
+(gdb) disassemble
+Dump of assembler code for function main:         _________________
+   0x0000555555555167 <+0>:     endbr64                            |
+   0x000055555555516b <+4>:     push   %rbp                        |--> Prologue
+   0x000055555555516c <+5>:     mov    %rsp,%rbp                   |
+   0x000055555555516f <+8>:     sub    $0x10,%rsp _________________|
+   0x0000555555555173 <+12>:    movl   $0xa,-0xc(%rbp)                   --------------|
+   0x000055555555517a <+19>:    movl   $0x14,-0x8(%rbp)                                |
+   0x0000555555555181 <+26>:    mov    -0x8(%rbp),%edx                                 |
+   0x0000555555555184 <+29>:    mov    -0xc(%rbp),%eax                                 |
+   0x0000555555555187 <+32>:    mov    %edx,%esi                                       |
+   0x0000555555555189 <+34>:    mov    %eax,%edi                                       |---> main() function logic body.
+=> 0x000055555555518b <+36>:    call   0x555555555149 <add>                            |
+   0x0000555555555190 <+41>:    mov    %eax,-0x4(%rbp)                                 |
+   0x0000555555555193 <+44>:    mov    -0x4(%rbp),%eax                                 |
+   0x0000555555555196 <+47>:    mov    %eax,%esi                                       |
+   0x0000555555555198 <+49>:    lea    0xe65(%rip),%rax        # 0x555555556004        |
+   0x000055555555519f <+56>:    mov    %rax,%rdi                                       |
+   0x00005555555551a2 <+59>:    mov    $0x0,%eax                                       |
+   0x00005555555551a7 <+64>:    call   0x555555555050 <printf@plt>       --------------|
+   0x00005555555551ac <+69>:    mov    $0x0,%eax
+   0x00005555555551b1 <+74>:    leave            ---------------|
+   0x00005555555551b2 <+75>:    ret                             |--> Epilogue
+End of assembler dump.                                          |
+                                                 ---------------|
+(gdb) si
+add (a=1869375856, b=1700750446) at test.c:4
+4       {
+(gdb) disassemble
+Dump of assembler code for function add:          ---------------|
+=> 0x0000555555555149 <+0>:     endbr64                          |--> prologue
+   0x000055555555514d <+4>:     push   %rbp                      |
+   0x000055555555514e <+5>:     mov    %rsp,%rbp  ---------------|
+   0x0000555555555151 <+8>:     mov    %edi,-0x14(%rbp)                  -------------|
+   0x0000555555555154 <+11>:    mov    %esi,-0x18(%rbp)                               |
+   0x0000555555555157 <+14>:    mov    -0x14(%rbp),%edx                               |
+   0x000055555555515a <+17>:    mov    -0x18(%rbp),%eax                               |---> add() function logic body.
+   0x000055555555515d <+20>:    add    %edx,%eax                                      |
+   0x000055555555515f <+22>:    mov    %eax,-0x4(%rbp)                                |
+   0x0000555555555162 <+25>:    mov    -0x4(%rbp),%eax                   -------------|
+   0x0000555555555165 <+28>:    pop    %rbp      ---------------|
+   0x0000555555555166 <+29>:    ret                             |--> Epilogue
+End of assembler dump.                           ---------------|
+(gdb)
+
+Below are the things happening in the prologue of function test(),
+
+
+   0x0000555555555149 <+0>:     endbr64
+   0x000055555555514d <+4>:     push   %rbp
+   0x000055555555514e <+5>:     mov    %rsp,%rbp
+
+(1)
+
+   0x0000555555555149 <+0>:     endbr64
+
+'endbr64' is related to "Intel's Control-Flow Enforcement Technology (CET)".
+Intel CET offers hardware protection against Return-oriented Programming (ROP)
+and Jump/Call-oriented Programming (JOP/COP) attacks, which manipulate control
+flow in order to re-use existing code for malicious purposes.
+
+For now, we can ignore this part, as this is just for protection from attack and
+has not role in program execution. We will take this up later.
+
+(2)
+
+   0x000055555555514d <+4>:     push   %rbp
+
+When a function uses stack, it just has the starting address of its own part of
+the whole stack (stack frame address) and it just uses it with some offsets.
+Check the test() function logic above. It is using stack with offsets as below,
+
+   0x0000555555555151 <+8>:     mov    %edi,-0x14(%rbp)
+   0x0000555555555154 <+11>:    mov    %esi,-0x18(%rbp)....and so on.
+
+Now, what we want to do with this below prologue instruction is that, before
+we get this function's stack start address in register 'ebp', let's preserve the
+caller function's stack frame address (%ebp) in the stack. It is done with this
+same 'push' instruction.
+
+(3)
+
+   0x000055555555514e <+5>:     mov    %rsp,%rbp
+
+Copy the value of stack pointer '%rsp' to '%rbp', so that '%rbp' will be used
+as stack frame pointer in this function logic.
+
+Below are the things happening in the epilogue of function test(),
+
+
+   0x0000555555555165 <+28>:    pop    %rbp
+   0x0000555555555166 <+29>:    ret
+
+(1)
+
+
+   0x0000555555555165 <+28>:    pop    %rbp
+
+pop the stack frame pointer which was pushed in the prologue section of the
+function and store it in the register '%rbp' because after this, execution
+will return back to the caller function. There it will need the same '%rbp',
+which was stored in '%rbp' before calling this function, so that caller function
+can continue with the execution.
+
+(2)
+
+   0x0000555555555166 <+29>:    ret
+
+Get the return address from the '%rsp + 64 bit', increment '%rsp' and then
+return to that address.
