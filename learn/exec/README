@@ -1,0 +1,46 @@
+The exec() family of functions replaces the current process image with a new
+process image.
+
+For example, write two programs as below:
+
+[ ] cat child.c
+#include <stdio.h>
+#include <unistd.h>
+
+int main(void)
+{
+    printf("Hello World from child process. PID : %d\n", getpid());
+    return 0;
+}
+
+[ ] cat parent.c
+#include <stdio.h>
+#include <unistd.h>
+
+int main(void)
+{
+    char *args[] = {NULL};
+    printf("Hello World from parent process. PID : %d\n", getpid());
+    if (fork() == 0) {                          // Create a copy process
+        if (execvp("./child", args) == -1) {    // Convert copy process to child process
+            perror("execvp");
+        }
+    }
+    return 0;
+}
+
+[ ] gcc child.c -o child
+[ ] gcc parent.c -o parent
+
+Above, parent process is just creating a copy of itself and then that new copied
+process calls 'execvp' inside itself.
+
+The 'execvp' system call just convert the current process(newly created) as a
+copy of 'child' process. 
+
+we can compile and try to run the parent executable, it will create a process
+and that new process makes itself a copy of 'child'.
+
+[ ] ./parent
+Hello World from parent process. PID : 2137
+Hello World from child process. PID : 2138
