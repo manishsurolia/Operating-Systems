@@ -1,0 +1,178 @@
+In Linux, there is a glibc code which executes before and after the main
+function. The function which actually gets called even before the main()
+function, is a glibc function called "__libc_start_main".
+
+Below are the tasks of __libc_start_main() function (taken from below link).
+
+The __libc_start_main() function shall perform any necessary initialization of
+the execution environment, call the main function with appropriate arguments,
+and handle the return from main(). If the main() function returns, the return
+value shall be passed to the exit() function.
+
+https://refspecs.linuxbase.org/LSB_3.1.1/LSB-Core-generic/LSB-Core-generic/baselib---libc-start-main-.html
+
+__libc_start_main() does below things,
+
+- performing any necessary security checks if the effective user ID is not the
+same as the real user ID.
+
+- initialize the threading subsystem.
+
+- registering the rtld_fini to release resources when this dynamic shared object
+exits (or is unloaded).
+
+- registering the fini handler to run at program exit.
+
+- calling the initializer function (*init)().
+
+- calling main() with appropriate arguments.
+
+- calling exit() with the return value from main()
+
+The 'init' and 'fini' function are functions which are called before and after
+execution of the main(). They are like constructor and destruction in c++
+programs.
+
+If we want to introduce some function before after and after the execution of
+the main(), we can do it as below:
+
+[ ] cat test.c
+#include <stdio.h>
+
+static void before_main(void) __attribute__((constructor));
+static void after_main(void) __attribute__((destructor));
+
+static void before_main(void)
+{
+    printf("Before calling main().\n");
+    getchar();
+    return;
+}
+
+static void after_main(void)
+{
+    printf("After main() executed.\n");
+    getchar();
+    return;
+}
+
+int main(void)
+{
+    printf("Inside main() function.\n");
+    getchar();
+    return 0;
+}
+
+Compile and execute this program as below,
+
+[ ] gcc test.c -o test
+# ./test
+Before calling main().
+
+Inside main() function.
+
+After main() executed.
+
+As we can see both before and after function called by the glibc before and
+after execution of the main function.
+
+Compiler adds _start function automatically to each of the program which gets
+compiled and this is the starting point for the program execution. This calls
+the __glib_start_main() which internally calls the main() function. Also, the
+heap initialization is also done by the glibc code.
+
+To see this in working, we load the program in gdb, stop it at _start and see
+whether heap segment is present in the memory maps of this process or not.
+
+# gcc -g test.c -o test
+# gdb ./test
+(gdb) set backtrace past-entry
+(gdb) set backtrace past-main
+(gdb) break _start
+Breakpoint 1 at 0x1080
+(gdb) run
+Starting program: /home/manish/manish/OS/libc_start_main/test
+
+This GDB supports auto-downloading debuginfo from the following URLs:
+  <https://debuginfod.ubuntu.com>
+Enable debuginfod for this session? (y or [n]) y
+Debuginfod has been enabled.
+To make this setting permanent, add 'set debuginfod enabled on' to .gdbinit.
+
+Breakpoint 1.2, 0x00007ffff7fe4de0 in _start () from /lib64/ld-linux-x86-64.so.2
+(gdb)
+
+In a different shell, check this process maps as below,
+
+[ ] ps -eaf | grep test
+kernoops     890       1  0 15:30 ?        00:00:00 /usr/sbin/kerneloops --test
+manish      2846    2081  0 18:15 pts/0    00:00:00 gdb ./test
+manish      2852    2846  0 18:15 pts/0    00:00:00 /home/manish/manish/OS/libc_start_main/test
+manish      2856    2174  0 18:16 pts/1    00:00:00 grep --color=auto test
+
+[ ] cat /proc/2852/maps
+555555554000-555555555000 r--p 00000000 08:02 918153                     /home/manish/manish/OS/libc_start_main/test
+555555555000-555555556000 r-xp 00001000 08:02 918153                     /home/manish/manish/OS/libc_start_main/test
+555555556000-555555557000 r--p 00002000 08:02 918153                     /home/manish/manish/OS/libc_start_main/test
+555555557000-555555559000 rw-p 00002000 08:02 918153                     /home/manish/manish/OS/libc_start_main/test
+7ffff7fc2000-7ffff7fc6000 r--p 00000000 00:00 0                          [vvar]
+7ffff7fc6000-7ffff7fc8000 r-xp 00000000 00:00 0                          [vdso]
+7ffff7fc8000-7ffff7fc9000 r--p 00000000 08:02 5767547                    /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7ffff7fc9000-7ffff7ff1000 r-xp 00001000 08:02 5767547                    /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7ffff7ff1000-7ffff7ffb000 r--p 00029000 08:02 5767547                    /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7ffff7ffb000-7ffff7fff000 rw-p 00033000 08:02 5767547                    /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7ffffffde000-7ffffffff000 rw-p 00000000 00:00 0                          [stack]
+ffffffffff600000-ffffffffff601000 --xp 00000000 00:00 0                  [vsyscall]
+
+As you can see that the memory maps for this process do not have a segment for
+heap and the reason is that the glib is responsible for creation(mmap) and
+management of the heap segment and glibc has not started yet.
+
+Now, let's fast forward to the main function by setting up a break point on the
+main and see whether heap has come or not for this process. 
+
+(gdb) c
+Continuing.
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+Breakpoint 1.1, 0x0000555555555080 in _start ()
+(gdb) c
+Continuing.
+Before calling main().
+
+
+Breakpoint 2, main () at test.c:22
+22          printf("Inside main() function.\n");
+(gdb)
+
+Again, check the memory maps in another shell.
+
+[ ] cat /proc/2852/maps
+555555554000-555555555000 r--p 00000000 08:02 918153                     /home/manish/manish/OS/libc_start_main/test
+555555555000-555555556000 r-xp 00001000 08:02 918153                     /home/manish/manish/OS/libc_start_main/test
+555555556000-555555557000 r--p 00002000 08:02 918153                     /home/manish/manish/OS/libc_start_main/test
+555555557000-555555558000 r--p 00002000 08:02 918153                     /home/manish/manish/OS/libc_start_main/test
+555555558000-555555559000 rw-p 00003000 08:02 918153                     /home/manish/manish/OS/libc_start_main/test
+555555559000-55555557a000 rw-p 00000000 00:00 0                          [heap]
+7ffff7c00000-7ffff7c22000 r--p 00000000 08:02 5767552                    /usr/lib/x86_64-linux-gnu/libc.so.6
+7ffff7c22000-7ffff7d9a000 r-xp 00022000 08:02 5767552                    /usr/lib/x86_64-linux-gnu/libc.so.6
+7ffff7d9a000-7ffff7df2000 r--p 0019a000 08:02 5767552                    /usr/lib/x86_64-linux-gnu/libc.so.6
+7ffff7df2000-7ffff7df6000 r--p 001f1000 08:02 5767552                    /usr/lib/x86_64-linux-gnu/libc.so.6
+7ffff7df6000-7ffff7df8000 rw-p 001f5000 08:02 5767552                    /usr/lib/x86_64-linux-gnu/libc.so.6
+7ffff7df8000-7ffff7e05000 rw-p 00000000 00:00 0
+7ffff7fa9000-7ffff7fac000 rw-p 00000000 00:00 0
+7ffff7fc0000-7ffff7fc2000 rw-p 00000000 00:00 0
+7ffff7fc2000-7ffff7fc6000 r--p 00000000 00:00 0                          [vvar]
+7ffff7fc6000-7ffff7fc8000 r-xp 00000000 00:00 0                          [vdso]
+7ffff7fc8000-7ffff7fc9000 r--p 00000000 08:02 5767547                    /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7ffff7fc9000-7ffff7ff1000 r-xp 00001000 08:02 5767547                    /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7ffff7ff1000-7ffff7ffb000 r--p 00029000 08:02 5767547                    /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7ffff7ffb000-7ffff7ffd000 r--p 00033000 08:02 5767547                    /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7ffff7ffd000-7ffff7fff000 rw-p 00035000 08:02 5767547                    /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7ffffffde000-7ffffffff000 rw-p 00000000 00:00 0                          [stack]
+ffffffffff600000-ffffffffff601000 --xp 00000000 00:00 0                  [vsyscall]
+
+Now, the heap memory segment is added in our process, we can run gdb step by
+step form '_start' till 'main' to see all the activities happen during this
+time.
