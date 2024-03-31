@@ -1,0 +1,194 @@
+The function dl_iterate_phdr() provides a means for applications to dynamically
+inspect the shared objects they have loaded during runtime and determine the
+order in which they were loaded.
+
+dl_iterate_phdr() iterates through the list of shared objects belonging to an
+application, invoking a specified callback function once for each object. This
+process continues until either all shared objects have been processed or the
+callback function returns a nonzero value.
+
+The callback function receives three arguments: 'info', a pointer to a structure
+containing information about the shared object; 'size', the size of the
+structure pointed to by 'info'; and 'data', a copy of the value passed by the
+calling program as the second argument in the dl_iterate_phdr() call.
+
+It's important to note that this function also triggers the registered callback
+for the code that is written and compiled alongside the shared objects.
+
+The purpose of this program is to demonstrate how to locate a symbol loaded at a
+specific memory address.
+
+When a program (elf) is loaded into memory, each symbol is loaded at a distinct
+offset from the starting virtual address '0x0'.
+
+For example, 
+
+[ ] cat sample.c
+
+#include <stdio.h>
+
+unsigned int global_var;
+
+int main() {
+    printf("'global_var' address : %p\n", &global_var);
+    return 0;
+}
+
+[ ] gcc sample.c -o sample
+[ ] objcopy --only-keep-debug sample sample.debug
+[ ] nm sample.debug > symbols.txt
+[ ] cat symbols.txt
+000000000000038c r __abi_tag
+0000000000004010 B __bss_start
+0000000000004010 b completed.0
+                 w __cxa_finalize@GLIBC_2.2.5
+0000000000004000 B __data_start
+0000000000004000 W data_start
+0000000000001090 t deregister_tm_clones
+0000000000001100 t __do_global_dtors_aux
+0000000000003dc0 b __do_global_dtors_aux_fini_array_entry
+0000000000004008 B __dso_handle
+0000000000003dc8 b _DYNAMIC
+0000000000004010 B _edata
+0000000000004018 B _end
+0000000000001178 T _fini
+0000000000001140 t frame_dummy
+0000000000003db8 b __frame_dummy_init_array_entry
+0000000000002100 b __FRAME_END__
+0000000000003fb8 b _GLOBAL_OFFSET_TABLE_
+0000000000004014 B global_var
+                 w __gmon_start__
+0000000000002020 b __GNU_EH_FRAME_HDR
+0000000000001000 T _init
+0000000000002000 B _IO_stdin_used
+                 w _ITM_deregisterTMCloneTable
+                 w _ITM_registerTMCloneTable
+                 U __libc_start_main@GLIBC_2.34
+0000000000001149 T main
+                 U printf@GLIBC_2.2.5
+00000000000010c0 t register_tm_clones
+0000000000001060 T _start
+0000000000004010 B __TMC_END__
+
+'global_var' is present at address '0x0000000000004014'.
+
+Now, run this executable to find the address of 'global_var'.
+
+[ ] ./sample
+'global_var' address : 0x56084342a014
+
+As observed, the address of 'global_var' doesn't match the address specified in
+the elf/debug file. This discrepancy arises due to ASLR (Address Space Layout
+Randomization). Each time the program loads, its base address in virtual memory
+is randomized, and it might not start at address 0x0.
+
+However, according to the elf file, the program should load at address 0x0, and
+the symbol 'global_val' should be located at address '0x4014'.
+
+Simply printing the address of a symbol doesn't facilitate searching for the
+symbol in the symbol file and retrieving its variable name.
+
+To address this issue, we'll utilize the 'dl_iterate_phdr()' system call, which
+provides information about the base address of the running program.
+
+By subtracting the base address from the target address, we can determine the
+location of the address in the symbol file. This allows us to retrieve the
+symbol name based on this information.
+
+Let's proceed to rewrite the program accordingly:
+
+[ ] cat iterate_shared_object.c
+#define _GNU_SOURCE
+#include <stdio.h>
+#include <stdlib.h>
+#include <link.h>
+
+unsigned int global_var;
+
+int callback(struct dl_phdr_info *info, size_t size, void *data) {
+    printf("Name: %s\n", info->dlpi_name);
+    printf("Base address: 0x%lx\n", (unsigned long)info->dlpi_addr);
+    printf("\n---------------------\n\n");
+    return 0;
+}
+
+int main() {
+    dl_iterate_phdr(callback, NULL);
+    printf("'global_var' address : %p\n", &global_var);
+    return 0;
+}
+
+[ ] gcc iterate_shared_object.c -o iterate_shared_object
+[ ] objcopy --only-keep-debug iterate_shared_object iterate_shared_object.debug
+[ ] nm iterate_shared_object.debug > iterate_shared_object.symbols
+[ ] cat iterate_shared_object.symbols
+000000000000038c r __abi_tag
+0000000000004010 B __bss_start
+0000000000001189 T callback
+0000000000004010 b completed.0
+                 w __cxa_finalize@GLIBC_2.2.5
+0000000000004000 B __data_start
+0000000000004000 W data_start
+00000000000010d0 t deregister_tm_clones
+                 U dl_iterate_phdr@GLIBC_2.2.5
+0000000000001140 t __do_global_dtors_aux
+0000000000003db0 b __do_global_dtors_aux_fini_array_entry
+0000000000004008 B __dso_handle
+0000000000003db8 b _DYNAMIC
+0000000000004010 B _edata
+0000000000004018 B _end
+0000000000001238 T _fini
+0000000000001180 t frame_dummy
+0000000000003da8 b __frame_dummy_init_array_entry
+0000000000002158 b __FRAME_END__
+0000000000003fa8 b _GLOBAL_OFFSET_TABLE_
+0000000000004014 B global_var
+                 w __gmon_start__
+0000000000002054 b __GNU_EH_FRAME_HDR
+0000000000001000 T _init
+0000000000002000 B _IO_stdin_used
+                 w _ITM_deregisterTMCloneTable
+                 w _ITM_registerTMCloneTable
+                 U __libc_start_main@GLIBC_2.34
+00000000000011f4 T main
+                 U printf@GLIBC_2.2.5
+                 U puts@GLIBC_2.2.5
+0000000000001100 t register_tm_clones
+00000000000010a0 T _start
+0000000000004010 B __TMC_END__
+
+'global_var' is present at address '0x0000000000004014'.
+
+Now, run this executable to find the address of 'global_var'.
+
+[ ] ./iterate_shared_object
+Name:
+Base address: 0x55cf6bb88000
+
+---------------------
+
+Name: linux-vdso.so.1
+Base address: 0x7fffb9fad000
+
+---------------------
+
+Name: /lib/x86_64-linux-gnu/libc.so.6
+Base address: 0x7f66ad400000
+
+---------------------
+
+Name: /lib64/ld-linux-x86-64.so.2
+Base address: 0x7f66ad677000
+
+---------------------
+
+global var address : 0x55cf6bb8c014
+
+Now, as shown above, the base address of this program is : '0x55cf6bb88000'
+and the address for this 'global_var' is : '0x55cf6bb8c014'
+
+Subtract the addresses : 0x55cf6bb8c014 - 0x55cf6bb88000
+                       : 0x4014
+
+Now, by searching for the address '0x4014' in the symbol file, we can identify
+the symbol located at this address, which is named 'global_var'.
