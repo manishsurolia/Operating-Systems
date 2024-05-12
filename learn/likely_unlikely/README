@@ -1,0 +1,120 @@
+Developers use 'likely' and 'unlikely' hints to guide the C compiler in
+determining the probabilities of different code branches. The compiler then
+optimizes the assembly output accordingly, minimizing the need for branches in
+the likely code path. This optimization reduces jumps during program execution
+and helps to minimize processor pipeline flushes."
+
+processor pipeline flushes
+--------------------------
+
+A "processor pipeline flush" refers to the process of emptying or clearing the
+stages of the processor pipeline due to a change in program flow or an
+unforeseen event.
+
+In modern processors, instructions are executed in multiple stages, often
+referred to as a pipeline. Each stage of the pipeline performs a specific
+operation on the instruction, such as instruction fetch, decode, execute, and
+write back. Pipelining allows for multiple instructions to be processed
+simultaneously, which improves overall throughput and performance.
+
+However, if there is a change in program flow, such as a branch instruction
+being taken or a cache miss occurring, the instructions in the pipeline that
+have not yet completed their execution need to be discarded or flushed out of
+the pipeline. This is because the instructions in the pipeline may no longer be
+valid or relevant due to the change in program flow.
+
+Pipeline flushes can have a negative impact on performance because they
+introduce delays and waste computational resources. Therefore, techniques such
+as branch prediction, instruction prefetching, and out-of-order execution are
+employed to mitigate the frequency and impact of pipeline flushes in modern
+processors. Additionally, optimizing code to minimize branch mispredictions and
+data hazards can help reduce the occurrence of pipeline flushes.
+
+Example
+-------
+
+Let's check below 2 C programs (likely.c and unlikely.c).
+
+[ ]  vim -O likely.c unlikely.c
+
+#include <stdio.h>                                                                                      |#include <stdio.h>
+#include <unistd.h>                                                                                     |#include <unistd.h>
+#include <stdlib.h>                                                                                     |#include <stdlib.h>
+                                                                                                        |
+#define likely(x) __builtin_expect(!!(x), 1)                                                            |#define likely(x) __builtin_expect(!!(x), 1)
+#define unlikely(x) __builtin_expect(!!(x), 0)                                                          |#define unlikely(x) __builtin_expect(!!(x), 0)
+                                                                                                        |
+__attribute__((noinline)) void                                                                          |__attribute__((noinline)) void
+print (int input)                                                                                       |print (int input)
+{                                                                                                       |{
+    if (likely(input > 0)) {                                                                            |    if (unlikely(input > 0)) {
+        printf("Positive\n");                                                                           |        printf("Positive\n");
+    } else {                                                                                            |    } else {
+        printf("Zero or Negative\n");                                                                   |        printf("Zero or Negative\n");
+    }                                                                                                   |    }
+    return;                                                                                             |    return;
+}                                                                                                       |}
+                                                                                                        |
+int main(int argc, char *argv[])                                                                        |int main(int argc, char *argv[])
+{                                                                                                       |{
+    int num;                                                                                            |    int num;
+    printf("Please provide a positive/zero/negative number. : ");                                       |    printf("Please provide a positive/zero/negative number. : ");
+    scanf("%d", &num);                                                                                  |    scanf("%d", &num);
+    print(num);                                                                                         |    print(num);
+    return 0;                                                                                           |    return 0;
+}                                                                                                       |}
+
+In the program on the left(likely.c), we are providing hint to the comiler that
+the input in the 'print' function will be most likely greater than 0, whereas in
+the program on the right, it's unlikely that the input will greater than 0
+(Meaning, the input value will be most likely less than or equal to 0).
+
+Using these hints (likely/unlikely) provided to the compiler, compiler segments
+both sections (if and else code parts) into likely and unlikely code segments.
+Consequently, the compiler generates assembly code in a manner that minimizes
+or eliminates jumps in the likely code segments.
+
+Compile both the programs as below and compare both the generated assembly file,
+
+[ ] gcc unlikely.c -O2 -S  unlikely.s
+[ ] gcc unlikely.c -O2 -S unlikely.s
+[ ] vim -O likely.s unlikely.s
+
+code snippet:
+
+----
+----
+.LC0:                                                                                                   |.LC0:
+    .string "Positive"                                                                                  |    .string "Positive"
+.LC1:                                                                                                   |.LC1:
+    .string "Zero or Negative"                                                                          |    .string "Zero or Negative"
+    .text                                                                                               |    .text
+    .p2align 4                                                                                          |    .p2align 4
+    .globl  print                                                                                       |    .globl  print
+    .type   print, @function                                                                            |    .type   print, @function
+print:                                                                                                  |print:
+.LFB51:                                                                                                 |.LFB51:
+    .cfi_startproc                                                                                      |    .cfi_startproc
+    endbr64                                                                                             |    endbr64
+    testl   %edi, %edi                                                                                  |    testl   %edi, %edi
+    jle .L2 <---------------------------------Compare there two instructions--------------------------->|    jg  .L4
+    leaq    .LC0(%rip), %rdi                                                                            |    leaq    .LC1(%rip), %rdi
+    jmp puts@PLT                                                                                        |    jmp puts@PLT
+    .p2align 4,,10                                                                                      |    .p2align 4,,10
+    .p2align 3                                                                                          |    .p2align 3
+.L2:                                                                                                    |.L4:
+    leaq    .LC1(%rip), %rdi                                                                            |    leaq    .LC0(%rip), %rdi
+    jmp puts@PLT                                                                                        |    jmp puts@PLT
+    .cfi_endproc                                                                                        |    .cfi_endproc
+----
+----
+
+In the left side generated code, it jumps for printing "Zero or Negative",
+whereas in the right side, it jumps for printing "Positive", both of these are
+according to the hints provided to by the developer. 
+
+Note:
+(1) The Linux kernel extensively utilizes the likely and unlikely annotations.
+(2) Developers must exercise caution when providing these hints to the compiler,
+as an incorrect hint can lead to an increase in jumps and consequently slow down
+the processor due to multiple pipeline flushes.
