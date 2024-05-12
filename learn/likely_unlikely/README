@@ -97,7 +97,7 @@ print:                                                                          
     .cfi_startproc                                                                                      |    .cfi_startproc
     endbr64                                                                                             |    endbr64
     testl   %edi, %edi                                                                                  |    testl   %edi, %edi
-    jle .L2 <---------------------------------Compare there two instructions--------------------------->|    jg  .L4
+    jle .L2 <---------------------------------Compare these two instructions--------------------------->|    jg  .L4
     leaq    .LC0(%rip), %rdi                                                                            |    leaq    .LC1(%rip), %rdi
     jmp puts@PLT                                                                                        |    jmp puts@PLT
     .p2align 4,,10                                                                                      |    .p2align 4,,10
@@ -111,7 +111,7 @@ print:                                                                          
 
 In the left side generated code, it jumps for printing "Zero or Negative",
 whereas in the right side, it jumps for printing "Positive", both of these are
-according to the hints provided to by the developer. 
+according to the hints provided by the developer.
 
 Note:
 (1) The Linux kernel extensively utilizes the likely and unlikely annotations.
