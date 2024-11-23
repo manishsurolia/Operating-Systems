@@ -1,0 +1,116 @@
+How to use kprobe:
+
+With kprobe enabled, we select a kernel function and associate our probe
+function with that. So,
+
+1. Check if your linux was built with CONFIG_KROBES=y or not?
+[ ] cat /usr/src/linux-lts/.config | grep CONFIG_KPROBES
+
+#cat /usr/src/linux-lts/.config | grep CONFIG_KPROBES
+CONFIG_KPROBES=y
+CONFIG_KPROBES_ON_FTRACE=y
+
+If you do not see above output, rebuild your kernel with 'CONFIG_KPROBES=y'.
+
+2. Go to '/sys/kernel/debug/tracing' folder. 
+[ ] cd /sys/kernel/debug/tracing/
+
+3. Make the 'tracing_on' as 0 for now.
+[ ] echo 0 > tracing_on
+
+4. Make sure that the ftrace is disabled properly first. Look for 'trace:no' in
+the below output.
+
+[ ] cat trace
+
+# cat trace
+# tracer: nop
+#
+# entries-in-buffer/entries-written: 0/0   #P:4
+#
+#                                _-----=> irqs-off/BH-disabled
+#                               / _----=> need-resched
+#                              | / _---=> hardirq/softirq
+#                              || / _--=> preempt-depth
+#                              ||| / _-=> migrate-disable
+#                              |||| /     delay
+#           TASK-PID     CPU#  |||||  TIMESTAMP  FUNCTION
+#              | |         |   |||||     |         |
+
+5. Look for the kernel functions in '/proc/kallsyms', which you want to use
+kprobe for, as below.
+
+# cat /proc/kallsyms | grep icmp_rcv
+ffffffff91e66d20 T __pfx_icmp_rcv
+ffffffff91e66d30 T icmp_rcv
+
+# cat /proc/kallsyms | grep icmp_send
+ffffffff91e65500 T __pfx___icmp_send
+ffffffff91e65510 T __icmp_send
+ffffffff92946f40 r __ksymtab___icmp_send
+
+So, we can probe 'icmp_rcv' and '__icmp_send'.
+
+6. Make sure that the function you are try to kprobe, is not a static or
+inline function. Otherwise you won't be able to probe it. You can follow below
+link to check the same. Check your kernel version in this link.
+https://elixir.free-electrons.com/linux/v6.5/source/fs
+
+Note : All kernel functions can't be probed. Check blacklist
+(/sys/kernel/debug/kprobes/blacklist) to see what all functions can't be probed.
+
+6. Add probe function in 'kprobe_events' file as below. Here, we are creating a
+probe function 'debug_icmp_send' and attaching it to the kernel function
+'__icmp_send'. After we attach our probe function sucuessfully and start
+probing, whenever the kernel execution enters function '__icmp_send', first
+'debug_icmp_send' will be executed and whatever is written in that function,
+will get executed, and then execution will return back to the function
+'__icmp_send' and continue the normal execution of the same.
+
+Here, in this simple probe function, we are just trying to capture the value of
+register '%ax'.
+
+echo 'p:debug_icmp_send __icmp_send r1=%ax' > /sys/kernel/debug/tracing/kprobe_events
+
+7. Check below things,
+
+- Check the kprobes list to see whether our probe was added in the list or not.
+[ ] cat /sys/kernel/debug/kprobes/list
+
+# cat /sys/kernel/debug/kprobes/list
+ffffffff91e65514  k  __icmp_send+0x4    [DISABLED][FTRACE]
+
+- Check the 'kprobe_profile' file to see the stats,
+[ ] cat /sys/kernel/debug/tracing/kprobe_profile
+
+#cat /sys/kernel/debug/tracing/kprobe_profile
+  debug_icmp_send                                            0               0
+
+Becuase we have just defined the probe but probing not yet started, we are
+seeing all 0 here.
+
+ - Check the folder '/sys/kernel/debug/tracing/events/'. A new folder must be
+created here.
+
+[ ] ls /sys/kernel/debug/tracing/events/kprobes/ 
+
+# ls /sys/kernel/debug/tracing/events/kprobes/
+debug_icmp_send/  enable  filter
+
+- Check the file '/sys/kernel/debug/tracing/events/kprobes/enable'
+[ ] cat /sys/kernel/debug/tracing/events/kprobes/enable
+
+# cat /sys/kernel/debug/tracing/events/kprobes/enable
+0
+
+8. Enable the tracing now,
+
+- make 'enable' variable as 1 '/sys/kernel/debug/tracing/events/kprobes/enable'
+
+[ ] echo 1 > /sys/kernel/debug/tracing/events/kprobes/enable
+
+9. Now, just do ping for a single packet as below,
+
+[ ] ping google.com -c 1
+
+
