@@ -1,0 +1,70 @@
+ftrace: Function Tracer in the Linux Kernel
+
+Definition: 'ftrace' is a powerful tracing framework in the Linux kernel,
+primarily used for debugging and performance analysis. It allows developers and
+system administrators to trace function calls, events, and kernel activities,
+helping diagnose issues or optimize performance.
+
+Key Features of ftrace
+----------------------
+
+(1) Function Tracing:
+    - Trace the entry and exit of kernel functions.
+    - Understand the flow of execution within the kernel.
+
+(2) Event Tracing:
+    - Trace specific kernel events, such as scheduling, interrupts, or system
+      calls.
+
+(3) Custom Filters:
+    - Trace only specific functions or events using filters (e.g., by function
+      name or process).
+
+(4) Dynamic Tracing:
+
+    - Dynamically enable/disable tracing at runtime without recompiling the
+      kernel.
+
+(5) Trace Buffers:
+
+    - Records traces into an in-memory buffer for easy retrieval and analysis.
+
+(6) Multiple Tracers:
+    - Includes various tracers like function, sched, irq, and nop (no operation,
+      used to disable).
+
+How ftrace Works
+----------------
+
+'ftrace' operates by inserting small hooks into the kernel functions or events
+you want to trace. These hooks record information (such as timestamps,
+CPU states, and call parameters) into a trace buffer. The data can then be
+analyzed to understand system behavior.
+
+Key Components of ftrace
+------------------------
+
+1. Tracing Directory (/sys/kernel/debug/tracing/):
+
+    The main interface for ftrace. It contains files and directories for
+    configuration and accessing trace data.
+
+    Examples:
+
+        - current_tracer: Set the active tracer (e.g., function, sched).
+        - trace: View the current trace buffer.
+        - trace_pipe: Stream live trace data.
+        - available_tracers: List available tracers.
+
+2. Tracers:
+
+    function: Trace function calls in the kernel.
+    function_graph: Visualize function call flow with entry/exit.
+    sched: Trace scheduling events.
+    irqsoff: Detect long interrupt disabling times.
+    nop: No operation tracer (used to disable tracing).
+
+3. Filters:
+
+    Focus on specific functions, processes, or events using filters like
+    'set_ftrace_filter' or 'set_event_filter'.
