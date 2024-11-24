@@ -68,3 +68,6 @@ Key Components of ftrace
 
     Focus on specific functions, processes, or events using filters like
     'set_ftrace_filter' or 'set_event_filter'.
+
+Using ftrace
+------------
