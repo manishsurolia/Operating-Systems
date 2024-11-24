@@ -1,6 +1,10 @@
 ftrace: Function Tracer in the Linux Kernel
+-------------------------------------------
 
-Definition: 'ftrace' is a powerful tracing framework in the Linux kernel,
+Definition
+----------
+
+'ftrace' is a powerful tracing framework in the Linux kernel,
 primarily used for debugging and performance analysis. It allows developers and
 system administrators to trace function calls, events, and kernel activities,
 helping diagnose issues or optimize performance.
