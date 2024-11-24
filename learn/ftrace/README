@@ -75,6 +75,51 @@ Using ftrace
 1. Enable Debugfs:
 
     - Ensure debugfs is mounted:
-
         sudo mount -t debugfs none /sys/kernel/debug
         cd /sys/kernel/debug/tracing/
+
+2. Set a Tracer:
+    - To trace all kernel function calls
+        echo function > current_tracer
+
+3. Start Tracing:
+    - Enable tracing:
+        echo 1 > tracing_on
+
+4. View Trace Data:
+    - Read the trace log
+        cat trace
+
+5. Stop Tracing:
+    - Disable tracing
+        echo 0 > tracing_on
+
+Common Use Cases
+----------------
+
+1. Debugging Kernel Functions:
+    - Identify where and how kernel functions are being executed.
+
+2. Performance Profiling:
+    - Measure latencies and identify bottlenecks in kernel execution.
+
+3. Interrupt and Scheduling Analysis:
+    - Analyze scheduling delays, interrupt latencies, and context switches.
+
+4. Testing New Kernel Features:
+    - Verify the behavior of new or modified kernel code.
+
+Advantages of ftrace
+--------------------
+
+    - Built directly into the Linux kernel.
+    - Low overhead compared to other tracing tools.
+    - Highly configurable and powerful for a wide range of use cases.
+
+Limitations
+-----------
+
+    - Requires root privileges to access.
+    - Can be complex to configure for new users.
+    - May not provide detailed user-space insights (tools like strace or perf
+      are better for that).
