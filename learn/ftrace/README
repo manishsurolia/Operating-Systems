@@ -131,3 +131,11 @@ Limitations
     - Can be complex to configure for new users.
     - May not provide detailed user-space insights (tools like strace or perf
       are better for that).
+
+References:
+----------
+
+1. https://www.kernel.org/doc/html/v5.0/trace/ftrace.html
+2. https://lwn.net/Articles/365835/
+3. https://lwn.net/Articles/366796/
+4. https://lwn.net/Articles/370423/
