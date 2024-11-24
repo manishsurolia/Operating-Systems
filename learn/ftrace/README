@@ -94,6 +94,10 @@ Using ftrace
     - Disable tracing
         echo 0 > tracing_on
 
+6. Clear the existing trace data
+    - Clear tracing logs
+        echo 'nop' > current_tracer
+
 Common Use Cases
 ----------------
 
