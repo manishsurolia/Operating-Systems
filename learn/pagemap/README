@@ -33,3 +33,119 @@ If bit 63 = 0, PFN field is meaningless.
 Virtual address: 0x59a5ffdf0064
 PFN: 0x112db9
 Physical address: 0x112db9064
+
+Here’s the diagram showing exactly how a /proc/<pid>/pagemap read flows through
+the kernel until it gets you the PFN (page frame number).
+
+    ┌─────────────────────────────┐
+    │ Your program (user-space)   │
+    │                             │
+    │ open("/proc/<pid>/pagemap") │
+    │ read(fd, buf, 8)            │
+    └──────────────┬──────────────┘
+                   │
+                   ▼
+┌───────────────────────────────────┐
+│ procfs layer (virtual filesystem) │
+│  - Recognizes /proc/<pid>/pagemap │
+│  - Calls pagemap_read()           │
+└──────────────────┬────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────┐
+│ pagemap_read() (fs/proc/task_mmu.c)     │
+│                                         │
+│ 1. Determine page index = offset / 8    │
+│ 2. Compute virtual address = index *    │
+│    PAGE_SIZE                            │
+└──────────────────┬──────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────┐
+│ Find target process's mm_struct         │
+│  - Contains pointer to PGD (page global │
+│    directory = root of page tables)     │
+└──────────────────┬──────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────┐
+│ Page table walk (arch-specific code)    │
+│  e.g., on x86-64:                       │
+│   PGD → P4D → PUD → PMD → PTE           │
+│  - Check Present, Swapped, File-backed  │
+│  - Extract PFN from PTE                 │
+└──────────────────┬──────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────┐
+│ Build 64-bit pagemap entry:             │
+│  bit 63: Present                        │
+│  bit 62: Swapped                        │
+│  bit 61: File page                      │
+│  bits 0–54: PFN                         │
+└──────────────────┬──────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────┐
+│ copy_to_user() → Your buffer            │
+└─────────────────────────────────────────┘
+
+Page table view in x86_64 4-level paging (where each table has 512 entries (8
+bytes each), and virtual addresses are split into index bits for each level.):
+
+Virtual address (48 bits used on x86-64):
+┌─────────┬─────────┬─────────┬─────────┬───────────┐
+| PGD idx | P4D idx | PUD idx | PMD idx |  Page ofs |
+|  9 bits |  9 bits |  9 bits |  9 bits |   12 bits |
+└─────────┴─────────┴─────────┴─────────┴───────────┘
+      ↓
+      ↓ walk page tables (kernel memory)
+      ↓
+┌─────────────────────────────────────────────────────┐
+│ PGD (Page Global Directory)                         │
+│ - Stored in kernel RAM                              │
+│ - Entry → points to a P4D table (or large page)     │
+└─────┬───────────────────────────────────────────────┘
+      │
+      ▼
+┌─────────────────────────────────────────────────────┐
+│ P4D (Page 4th-level Directory)                      │
+│ - Entry → points to a PUD table (or large page)     │
+└─────┬───────────────────────────────────────────────┘
+      │
+      ▼
+┌─────────────────────────────────────────────────────┐
+│ PUD (Page Upper Directory)                          │
+│ - Entry → points to a PMD table (or large page)     │
+└─────┬───────────────────────────────────────────────┘
+      │
+      ▼
+┌─────────────────────────────────────────────────────┐
+│ PMD (Page Middle Directory)                         │
+│ - Entry → points to a PTE table (or large page)     │
+└─────┬───────────────────────────────────────────────┘
+      │
+      ▼
+┌─────────────────────────────────────────────────────┐
+│ PTE (Page Table Entry)                              │
+│ - 64 bits:                                          │
+│     bit 0   → Present                               │
+│     bit 1   → Read/Write                            │
+│     bit 2   → User/Supervisor                       │
+│     ...                                             │
+│     bits 12–51 → PFN (page frame number)            │
+│ - PFN × PAGE_SIZE = physical page base address      │
+└─────┬───────────────────────────────────────────────┘
+      │
+      ▼
+┌─────────────────────────────────────────────────────┐
+│ Physical page frame in RAM                          │
+│ (Contains your actual process data/code)            │
+└─────────────────────────────────────────────────────┘
+
+Summary:
+/proc/<pid>/pagemap is not the page table, but a real-time view generated from
+it. Every read walks the actual page tables of the target process to fetch the
+PFN & flags. That’s why you need root — exposing PFNs can leak kernel memory
+layout. So when you read pagemap, the kernel does the PGD→P4D→PUD→PMD→PTE walk
+for you and compresses the result into a single 64-bit value.
