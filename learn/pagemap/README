@@ -1,0 +1,35 @@
+/proc/<pid>/pagemap is a special binary file in Linux that lets you look up how
+a process’s virtual memory pages map to physical memory (or if they’re not even
+in RAM).
+
+Think of it as a big lookup table where:
+
+Each entry corresponds to one virtual page of the process.
+
+Each entry is 64 bits (8 bytes).
+
+By reading it, you can tell whether a given virtual address is present in RAM,
+swapped out, or backed by a file, and which physical page frame (PFN) it maps
+to.
+
+/proc/<pid>/pagemap entry format (per process virtual page)
+(64 bits per virtual page in the process)
+
+Bit positions:  63  62  61          ...        55              0
+                ┌──┬───┬───┬──────────────────┬────────────────┐
+                │P │ S │ F │   (reserved)     │   PFN / swap   │
+                └──┴───┴───┴──────────────────┴────────────────┘
+Legend:
+P  (bit 63) = Present (1 = page is in RAM, 0 = not present)
+S  (bit 62) = Swapped (1 = page is swapped)
+F  (bit 61) = File-page (1 = file-backed, 0 = anonymous)
+PFN bits (0–54 or 0–55) = Page Frame Number if present
+You check bit 63 to see if the page is in RAM before using PFN.
+
+If bit 63 = 0, PFN field is meaningless.
+
+# gcc virt2phys.c
+# ./a.out
+Virtual address: 0x59a5ffdf0064
+PFN: 0x112db9
+Physical address: 0x112db9064
