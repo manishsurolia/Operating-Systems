@@ -1,0 +1,46 @@
+When a child process exits, the kernel keeps a small amount of information about
+it (such as the exit code) in the system until the parent process retrieves this
+data by calling functions like wait() or waitpid().
+
+Until the parent reads the exit status, the child’s task_struct remains in the
+process table, marked with the EXIT_ZOMBIE flag. Once the parent collects the
+status, the kernel removes the entire task_struct entry along with this flag.
+
+Sequence of events:
+
+Every process has a parent process.
+
+When a child process exits, it sends a SIGCHLD signal to its parent and enters
+the "zombie" (defunct) state.
+
+The process is not fully removed from the system until the parent collects its
+exit status using wait() or waitpid().
+
+If the parent never calls wait(), the child remains in the defunct state. You
+can see this in tools like ps, where it appears as:
+
+1234 ?  Z    0:00 [some_process] <defunct>
+
+Key points:
+
+A defunct process does not use CPU or memory, only a minimal entry in the
+process table.
+
+Many defunct processes usually mean the parent program is not correctly handling
+child termination.
+
+If the parent itself exits, any zombie children are reparented to init (PID 1),
+which calls wait() to clean them up.
+
+Below is an example of defunct(zombie) state of a process. For 30 seconds the
+child process will be in a defunct(zombie) state.
+
+[ ] gcc defunct.c
+[ ] ./a.out &
+[1] 2732
+Parent process (PID=2732) sleeping...
+Child process (PID=2736) exiting...
+[ ] ps -eaf | grep 2736
+root        2736    2732  0 22:41 pts/0    00:00:00 [a.out] <defunct>
+root        2763     555  0 22:41 pts/0    00:00:00 grep 2736
+Parent exiting...
