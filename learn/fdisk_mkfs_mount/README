@@ -1,0 +1,137 @@
+Consider a new storage device (e.g., a flash drive). First, create a partition
+on the device, and then mount the partition to a designated directory within
+the root filesystem, such as /mnt/.
+
+Note : Below steps were done in a fedora distribution. Thats why you will see 
+zram and btrfs partitions during this excercise as currently default file system
+with fedora is 'btrfs' (B-tree File system). It is a modern, copy-on-write (CoW)
+file system for Linux designed to provide advanced features such as snapshots,
+subvolumes, and integrated multi-device support to address the limitations of
+traditional file systems. 
+
+We will check the Btrfs and zram in some other notes.
+
+Steps to create fresh partitions in a disk and mount it somewhere in root file
+system. 
+
+(1) lsblk - To see what all block devices we already have in our system.
+
+[ ]  lsblk
+NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+sda      8:0    0   10G  0 disk
+├─sda1   8:1    0    1M  0 part
+├─sda2   8:2    0    1G  0 part /boot
+└─sda3   8:3    0    9G  0 part /home
+                                /
+zram0  251:0    0  7.7G  0 disk [SWAP]  
+
+(2) Now insert your flash drive in a usb port.
+(3) Execute 'lsblk' command again.
+
+[ ] lsblk
+NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+sda      8:0    0   10G  0 disk
+├─sda1   8:1    0    1M  0 part
+├─sda2   8:2    0    1G  0 part /boot
+└─sda3   8:3    0    9G  0 part /home
+                                /
+sdb      8:16   1  7.2G  0 disk
+zram0  251:0    0  7.7G  0 disk [SWAP]
+
+(4) You can observe that you have got an extra block of memory named "sdb" after
+inserting flash drive in usb port.
+
+Note : This name 'sdb' is given by the kernel to the attached flash drive and
+everytime we boot the system(or attach this flash drive), we may see a different
+name for this. So be careful while using this name.
+
+(5) Before continuing just make sure that this inserted flash drive is not
+already mounted in our root file system, as below,
+
+[ ] mount | grep sdb
+
+Above should not show any output. This means, this disk is not mounted anywhere.
+If mounted, unmont that first.
+
+(6) Now run 'fdisk' command to 'sdb' block device to create a partition. We will
+just create a single partition with this whole device.
+
+[ ] sudo fdisk /dev/sdb
+[sudo] password for manish:
+
+Welcome to fdisk (util-linux 2.40.4).
+Changes will remain in memory only, until you decide to write them.
+Be careful before using the write command.
+
+Command (m for help): p <--- Check the current partitions in /dev/sdb
+Disk /dev/sdb: 7.22 GiB, 7751065600 bytes, 15138800 sectors
+Disk model: USB2FlashStorage
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: gpt
+Disk identifier: 2C932971-5ABA-43D0-82CA-5EEAB182704F
+
+Device     Start      End  Sectors  Size Type
+/dev/sdb1   2048 15136767 15134720  7.2G Linux filesystem
+
+Command (m for help): m <--- See all the available options
+
+Help:
+
+  GPT
+   M   enter protective/hybrid MBR
+
+  Generic
+   d   delete a partition
+   F   list free unpartitioned space
+   l   list known partition types
+   n   add a new partition
+   p   print the partition table
+   t   change a partition type
+   v   verify the partition table
+   i   print information about a partition
+   e   resize a partition
+
+  Misc
+   m   print this menu
+   x   extra functionality (experts only)
+
+  Script
+   I   load disk layout from sfdisk script file
+   O   dump disk layout to sfdisk script file
+
+  Save & Exit
+   w   write table to disk and exit
+   q   quit without saving changes
+
+  Create a new label
+   g   create a new empty GPT partition table
+   G   create a new empty SGI (IRIX) partition table
+   o   create a new empty MBR (DOS) partition table
+   s   create a new empty Sun partition table
+
+Command (m for help): g <--- Create a GPT partition table. This is used mostly.
+Created a new GPT disklabel (GUID: E8037E1C-C125-4384-999B-3726D4E49890).
+
+Command (m for help): p <--- Check the partitions again in /dev/sdb
+Disk /dev/sdb: 7.22 GiB, 7751065600 bytes, 15138800 sectors
+Disk model: USB2FlashStorage
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+Disklabel type: gpt
+Disk identifier: E8037E1C-C125-4384-999B-3726D4E49890
+
+Command (m for help): n <--- Create a new partition
+Partition number (1-128, default 1): <--- We want to create only one partition
+First sector (2048-15138766, default 2048): <--- Choose default
+Last sector, +/-sectors or +/-size{K,M,G,T,P} (2048-15138766, default 15136767):
+
+Created a new partition 1 of type 'Linux filesystem' and of size 7.2 GiB.
+
+Command (m for help): w <--- Write all the configs we have done so far in disk.
+The partition table has been altered.
+Calling ioctl() to re-read partition table.
+Syncing disks.
+
+
