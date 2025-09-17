@@ -105,6 +105,66 @@ The parent reads /etc/hostname again and confirms it still has the original
 hostname, proving that the child’s changes in the snapshot did not affect the
 parent’s root filesystem.
 
+What Btrfs snapshots cover:
+--------------------------
+
+A Btrfs snapshot only applies to data that lives inside a Btrfs subvolume.
+
+When you snapshot / (the root Btrfs subvolume), you’re only snapshotting the
+Btrfs parts of that tree (e.g. /etc, /home, /usr, etc.).
+
+It does not capture anything that’s a separate mount point (like procfs, tmpfs,
+sysfs, cgroupfs, etc.), even though they appear inside /.
+
+2. Case: /proc
+
+/proc is procfs, entirely virtual.
+
+Snapshotting / in Btrfs will not include /proc.
+
+When the child switches into the snapshot, it will see /proc as empty unless
+you remount procfs there.
+
+Nothing in /proc is preserved or rolled back by Btrfs snapshots.
+
+3. Case: /tmp with tmpfs
+
+/tmp is its own mount of tmpfs (in-memory).
+
+Snapshotting / won’t include /tmp.
+
+Changes inside /tmp in the child process are just tmpfs changes — not covered by
+Btrfs.
+
+After the child exits, /tmp is exactly as usual (since it was shared tmpfs all
+along).
+
+4. General rule
+
+Btrfs snapshots only version-control Btrfs subvolumes, not other mounted
+filesystems.
+
+If you want snapshot-like behavior for /tmp or /proc:
+
+For /tmp → you’d need something like overlayfs or tmpfs cloning, but there’s no
+“snapshot” support.
+
+For /proc → it’s purely a kernel view, so snapshotting makes no sense.
+
+Conclusion
+
+If the child modifies /tmp (on tmpfs) after switching to a Btrfs snapshot of /:
+
+Those modifications are not captured by Btrfs snapshots.
+
+They affect the shared tmpfs instance seen by both parent and child.
+
+Once the child exits, tmpfs is unchanged except for whatever temporary files it
+created/removed.
+
+So: only Btrfs-backed parts of / get snapshot isolation, not tmpfs, procfs, or
+other special mounts.
+
 Sample code execution:
 ---------------------
 
