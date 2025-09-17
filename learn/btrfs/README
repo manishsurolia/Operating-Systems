@@ -1,0 +1,165 @@
+Btrfs (B-tree File System):
+--------------------------
+
+A copy-on-write (CoW) filesystem for Linux, designed to improve on ext4 and add
+features that were previously only in advanced filesystems like ZFS.
+
+First developed by Oracle in 2007, now maintained by multiple companies (notably
+SUSE, Facebook/Meta, Fedora community).
+
+Key Features:
+------------
+
+Snapshots & Subvolumes → instant, space-efficient copies and independent
+filesystem trees.
+
+Checksumming → data and metadata are verified with checksums to detect
+corruption.
+
+Built-in RAID → RAID0/1/10 support inside the filesystem (no mdadm/LVM needed).
+
+Compression → transparent compression (zstd, lzo, zlib) saves disk space.
+
+Copy-on-write cloning → efficient file duplication without extra space until
+modified.
+
+Send/Receive → stream differences between snapshots (great for
+backup/replication).
+
+Online resize → can grow/shrink while mounted.
+
+Self-healing (with RAID) → bad data blocks can be automatically repaired from
+good copies.
+
+Advantages:
+----------
+
+Powerful snapshot/rollback capabilities.
+
+Good for workloads needing fast testing environments, backups, containers, and
+VMs.
+
+Growing adoption in distros (Fedora default rootfs, openSUSE default rootfs,
+Synology NAS).
+
+Limitations:
+-----------
+
+RAID5/6 is still considered unstable.
+
+Slightly more overhead than ext4 for very small/simple workloads.
+
+Not supported by all enterprise distros (e.g., RHEL dropped it)
+
+Use Cases:
+---------
+
+Fedora & openSUSE root filesystems.
+
+Servers needing frequent rollbacks (DB testing, system updates).
+
+NAS appliances (Synology, QNAP).
+
+Cloud and hyperscale companies (Facebook/Meta) for snapshots and massive data
+storage.
+
+Example:
+-------
+The program demonstrates using Btrfs snapshots in combination with fork() to
+test file system isolation between a parent and child process.
+
+Initial State (Parent Process):
+
+The program first reads and prints the string stored in /etc/hostname.
+
+At this point, both parent and child would still share the same root filesystem.
+
+Snapshot Creation:
+
+Before forking, the program uses a Btrfs snapshot of the root filesystem (or a
+specified subvolume).
+
+This snapshot provides an isolated copy-on-write environment for the child
+process.
+
+Fork and Child Execution:
+
+After fork(), the child process switches into the snapshot (via chroot or
+mounting snapshot).
+
+The child then calls sethostname() to change the hostname, which updates
+/etc/hostname inside the snapshot.
+
+It then reads and prints the modified hostname value.
+
+Parent Process Continues:
+
+While the child modifies its own snapshot view of /etc/hostname, the parent
+continues to use the original root filesystem.
+
+The parent later waits for the child to exit.
+
+After Child Exit:
+
+The parent reads /etc/hostname again and confirms it still has the original
+hostname, proving that the child’s changes in the snapshot did not affect the
+parent’s root filesystem.
+
+Sample code execution:
+---------------------
+
+Note : I use fedora 42 for this testing as it already has btrfs by default for
+root file system. This C file is present alongside this README file. You can use
+it for your reference.
+
+[ ] sudo gcc -Wall -O2 -o btrfs_fork_snap btrfs_fork_snap.c
+[ ] sudo ./btrfs_fork_snap
+[parent-before] /etc/hostname contains: 'FEDORA_42'
+[parent] Creating btrfs snapshot at /mnt/snap_test
+Create snapshot of '/' in '/mnt/snap_test'
+[child] In forked process
+[child-before] /etc/hostname contains: 'FEDORA_42'
+[child] Hostname changed via sethostname()
+[child] /etc/hostname updated inside snapshot.
+[child-after] /etc/hostname contains: 'snapshot-test'
+[child] Exiting now.
+[parent] Child finished with status 0
+[parent-after] /etc/hostname contains: 'FEDORA_42'
+[parent] Deleting snapshot /mnt/snap_test
+Delete subvolume 264 (no-commit): '/mnt/snap_test'
+[parent] Snapshot deleted successfully
+
+Flow chart:
+----------
+
+[ Parent process ]
+        |
+        |--- Read /etc/hostname (real rootfs)
+        |
+        |--- Create Btrfs snapshot: /mnt/snap_test
+        |
+        +--- fork()
+             |
+             +---[ Child process ]
+             |        |
+             |        |--- unshare(CLONE_NEWNS)
+             |        |--- chroot("/mnt/snap_test")
+             |        |
+             |        |--- Read /etc/hostname (from snapshot, same as parent initially)
+             |        |
+             |        |--- sethostname("snapshot-test")
+             |        |--- Write "snapshot-test" into /etc/hostname (inside snapshot)
+             |        |
+             |        |--- Read /etc/hostname again (shows "snapshot-test")
+             |        |
+             |        `--- exit()
+             |
+             `---[ Parent process continues ]
+                      |
+                      |--- Waits for child
+                      |
+                      |--- Read /etc/hostname again (real rootfs unchanged)
+                      |
+                      |--- Delete snapshot (/mnt/snap_test)
+                      |
+                      `--- Done
