@@ -108,7 +108,7 @@ parent’s root filesystem.
 What Btrfs snapshots cover:
 --------------------------
 
-A Btrfs snapshot only applies to data that lives inside a Btrfs subvolume.
+1. A Btrfs snapshot only applies to data that lives inside a Btrfs subvolume.
 
 When you snapshot / (the root Btrfs subvolume), you’re only snapshotting the
 Btrfs parts of that tree (e.g. /etc, /home, /usr, etc.).
