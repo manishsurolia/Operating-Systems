@@ -1,0 +1,89 @@
+Understanding zram and Its Behavior:
+-----------------------------------
+
+zram is a part of RAM that behaves like swap memory. The data stored in zram is
+compressed before being kept in memory.
+
+For example, consider a system with 8 GB of RAM:
+
+[ ] free -h
+              total        used        free      shared  buff/cache   available
+Mem:           7.7Gi       721Mi       7.0Gi       632Ki       378Mi       7.0Gi
+
+When zram is enabled, the kernel memory manager monitors RAM usage. As soon as
+memory usage exceeds a certain threshold, the kernel starts compressing pages
+and storing them in RAM via zram.
+
+For instance:
+
+Suppose 6 GB of RAM is already in use.
+
+If additional memory allocations occur (due to more applications or processes),
+some pages are compressed and stored in zram instead of being kept uncompressed
+in RAM.
+
+Practical Demonstration:
+-----------------------
+
+We can observe this behavior using a C program, zram_test.c, which continuously
+allocates memory and touches the pages to force usage.
+
+Compile the program
+
+[ ] gcc -O2 -o zram_test zram_test.c
+
+Run the program
+
+[ ] ./zram_test
+
+While the program runs, open another terminal to monitor zram usage:
+
+[ ] watch -n1 zramctl
+
+Sample Output
+
+From ./zram_test:
+
+Allocating memory in 1GB chunks... (press Ctrl+C to stop)
+Allocated 1024 MB, VmSwap = 0 kB
+Allocated 2048 MB, VmSwap = 0 kB
+Allocated 3072 MB, VmSwap = 0 kB
+Allocated 4096 MB, VmSwap = 0 kB
+Allocated 5120 MB, VmSwap = 0 kB
+Allocated 6144 MB, VmSwap = 0 kB
+Allocated 7168 MB, VmSwap = 78976 kB
+Allocated 8192 MB, VmSwap = 1205632 kB
+
+From watch -n1 zramctl:
+
+NAME       ALGORITHM DISKSIZE  DATA COMPR TOTAL STREAMS MOUNTPOINT
+/dev/zram0 lzo-rle       7.7G  1.8G 89.5M 92.9M       4 [SWAP]
+
+
+Key Points:
+----------
+
+When zram starts being used
+
+In this example, zram begins storing compressed pages after approximately 7 GB
+of memory has been allocated.
+
+Understanding zramctl output
+
+DATA → total uncompressed data written to zram.
+
+COMPR → actual RAM used to store the compressed data.
+
+Example: 1.8 GB of uncompressed data is stored in only 89.5 MB of RAM.
+
+Why compression is so effective:
+-------------------------------
+
+In this test, we wrote the same value to all memory locations, which makes it
+extremely easy to compress.
+
+If the memory contained more varied data, COMPR would be larger, because
+compression would be less effective.
+
+This experiment demonstrates how zram dynamically compresses memory pages,
+effectively expanding usable RAM without touching disk-based swap.
