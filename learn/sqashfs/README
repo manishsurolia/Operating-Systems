@@ -1,0 +1,149 @@
+SquashFS – Compact, Read-Only Filesystem
+----------------------------------------
+
+SquashFS is a compressed, read-only filesystem widely used in Linux systems for
+distributing software and operating system images. By design, it packs files,
+directories, and metadata into a single compressed image, making it
+space-efficient and portable.
+
+Because it is read-only, SquashFS guarantees immutability: once an image is
+built, its contents cannot be altered. This property is useful for scenarios
+like:
+
+Live Linux distributions (e.g., Fedora Live, Ubuntu Live CD)
+
+Firmware for embedded systems and IoT devices
+
+Package formats like Snap packages
+
+However, the same read-only nature becomes a limitation when a writable
+environment is needed. If we try to create or modify files in a mounted SquashFS
+image, the kernel denies the request with a Read-only filesystem error.
+
+To elobarate more,
+
+When a Linux distribution offers a “Try Linux without installing” (live session
+from ISO or USB):
+
+The root filesystem is shipped as a SquashFS image inside the ISO/USB.
+
+At boot, the kernel mounts that SquashFS as the read-only lowerdir.
+
+Then, an OverlayFS is set up with a tmpfs (RAM) upperdir.
+
+The merged view becomes the root filesystem / that you interact with.
+
+That’s why:
+
+You can use the system as if it were installed (create/edit files, install
+packages).
+
+But all changes vanish after reboot — because they were only in RAM.
+
+OverlayFS – Writable Layer on Top of Read-Only
+----------------------------------------------
+
+To overcome SquashFS’s immutability, Linux provides OverlayFS, a union
+filesystem that merges a read-only lower layer with a writable upper layer.
+
+OverlayFS works with three main components:
+
+lowerdir → the base read-only filesystem (SquashFS in this case).
+
+upperdir → a writable directory where new or changed files are stored.
+
+workdir → an internal directory required by OverlayFS for bookkeeping.
+
+The result of combining these is exposed through a merged directory that behaves
+as if the underlying read-only filesystem were writable.
+
+How It Works in Practice
+------------------------
+
+1. Create a SquashFS image with some files and mount it, for example at
+/mnt/test.
+
+At this stage, the filesystem is compressed and read-only.
+
+Attempts to create or modify files in /mnt/test will fail.
+
+2. Set up OverlayFS by creating writable directories for upperdir and workdir,
+and a merged mount point:
+
+/tmp/overlay/upper   # where new/modified files are stored
+/tmp/overlay/work    # internal workspace
+/tmp/overlay/merged  # combined writable view
+
+3. Mount OverlayFS:
+sudo mount -t overlay overlay \
+  -o lowerdir=/mnt/test,upperdir=/tmp/overlay/upper,workdir=/tmp/overlay/work \
+  /tmp/overlay/merged
+
+4. Use the merged view at /tmp/overlay/merged:
+
+You can now create, delete, and modify files.
+
+New or changed files are written into /tmp/overlay/upper.
+
+Unchanged files are read directly from /mnt/test (SquashFS).
+
+The original SquashFS remains untouched.
+
+5. Unmount the merged view when done:
+
+sudo umount /tmp/overlay/merged
+
+Why Combine SquashFS with OverlayFS?
+------------------------------------
+
+Space efficiency: SquashFS provides a compressed base, minimizing storage use.
+
+Immutability: The base system cannot be altered, ensuring consistency.
+
+Flexibility: OverlayFS gives a writable layer, allowing temporary modifications.
+
+Isolation: Changes can be easily discarded by unmounting, or preserved by saving
+the upperdir.
+
+This combination is especially useful for live systems, container environments,
+and testing setups, where a clean, read-only base is required but writable
+capability is also desirable.
+
+In short:
+--------
+
+SquashFS = read-only, compressed base.
+
+OverlayFS = writable layer on top.
+Together, they give a space-efficient, immutable system with the flexibility of
+writes.
+
+
+Steps:
+-----
+
+[ ] sudo dnf install squashfs-tools
+[ ] mkdir mysquashfs_data
+[ ] cd mysquashfs_data/
+[ ] echo "Hello from SquashFS!" > file1.txt
+[ ] echo "Fedora test file" > file2.txt
+[ ] cd ..
+[ ] mksquashfs ./mysquashfs_data/ mysquashfs.img -comp xz
+[ ] ls -lart
+[ ] sudo mkdir -p /mnt/test
+[ ] sudo mkdir -p /tmp/overlay/upper
+[ ] sudo mkdir -p /tmp/overlay/work
+[ ] sudo mkdir -p /tmp/overlay/lower
+[ ] sudo mount -t squashfs -o loop mysquashfs.img /tmp/overlay/lower/
+[ ] ls -lart /tmp/overlay/lower/
+[ ] cat /tmp/overlay/lower/file1.txt
+[ ] echo "Hello, Again" >> /tmp/overlay/lower/file1.txt
+[ ] sudo mount -t overlay overlay -o lowerdir=/tmp/overlay/lower,upperdir=/tmp/overlay/upper,workdir=/tmp/overlay/work /mnt/test
+[ ] cd /mnt/test/
+[ ] df -kh .
+[ ] ls -lart
+[ ] echo "Hello, Again" >> /mnt/test/file1.txt
+[ ] sudo mount | grep overlay
+[ ] cd ..
+[ ] sudo umount /tmp/overlay/lower
+[ ] sudo umount /mnt/test
